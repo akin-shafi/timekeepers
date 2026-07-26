@@ -682,3 +682,50 @@ export async function checkIfWorkingDayAction() {
     return { isWorkingDay: true }; // Fallback to true if check fails
   }
 }
+
+export async function getDashboardStatsAction() {
+  const userSession = await requireAuth();
+  
+  const user = await db.user.findUnique({
+    where: { id: userSession.id }
+  });
+
+  if (!user) return { success: false, error: "User not found" };
+
+  const now = new Date();
+  const year = now.getFullYear();
+  const month = now.getMonth();
+  
+  let requiredDays = user.requiredOfficeDaysPerMonth;
+  let isDynamic = false;
+
+  if (user.officeDays && user.officeDays.length > 0) {
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    let exactRequiredDays = 0;
+    
+    const dayMap: Record<string, number> = {
+      "SUNDAY": 0, "MONDAY": 1, "TUESDAY": 2, "WEDNESDAY": 3,
+      "THURSDAY": 4, "FRIDAY": 5, "SATURDAY": 6
+    };
+    
+    const targetDays = user.officeDays.map(d => dayMap[d.toUpperCase()]).filter(d => d !== undefined);
+    
+    for (let day = 1; day <= daysInMonth; day++) {
+      const date = new Date(year, month, day);
+      if (targetDays.includes(date.getDay())) {
+        exactRequiredDays++;
+      }
+    }
+    
+    requiredDays = exactRequiredDays;
+    isDynamic = true;
+  }
+  
+  return { 
+    success: true, 
+    requiredDays, 
+    requiredPerWeek: user.requiredOfficeDaysPerWeek,
+    officeDays: user.officeDays,
+    isDynamic 
+  };
+}

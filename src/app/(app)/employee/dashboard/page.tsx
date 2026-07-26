@@ -14,7 +14,7 @@ import {
   Building,
   Sparkles,
 } from "lucide-react";
-import { checkInAction, checkOutAction, getTodayAttendanceStatusAction, getActiveOfficeLocationsAction, checkIfWorkingDayAction } from "@/lib/actions/attendance.actions";
+import { checkInAction, checkOutAction, getTodayAttendanceStatusAction, getActiveOfficeLocationsAction, checkIfWorkingDayAction, getDashboardStatsAction } from "@/lib/actions/attendance.actions";
 
 export default function EmployeeDashboard() {
   const [workLocation, setWorkLocation] = useState<"OFFICE" | "REMOTE">("OFFICE");
@@ -34,6 +34,10 @@ export default function EmployeeDashboard() {
   const [overrideReason, setOverrideReason] = useState<string>("");
   const [expectedLocation, setExpectedLocation] = useState<string>("");
   const [gpsError, setGpsError] = useState<string>("");
+
+  const [requiredDays, setRequiredDays] = useState<number>(8);
+  const [requiredPerWeek, setRequiredPerWeek] = useState<number>(2);
+  const [officeDays, setOfficeDays] = useState<string[]>([]);
 
   const checkWorkingDay = async () => {
     try {
@@ -118,10 +122,24 @@ export default function EmployeeDashboard() {
     }
   };
 
+  const fetchDashboardStats = async () => {
+    try {
+      const res = await getDashboardStatsAction();
+      if (res.success) {
+        setRequiredDays(res.requiredDays || 8);
+        setRequiredPerWeek(res.requiredPerWeek || 2);
+        setOfficeDays(res.officeDays || []);
+      }
+    } catch (e) {
+      console.error("Failed to fetch dashboard stats", e);
+    }
+  };
+
   useEffect(() => {
     checkWorkingDay();
     fetchTodayStatus();
     fetchOffices();
+    fetchDashboardStats();
     // Fetch browser location for geofencing
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
@@ -215,7 +233,10 @@ export default function EmployeeDashboard() {
         <div className="bg-gray-100 dark:bg-slate-900/80 px-4 py-2.5 rounded-2xl border border-gray-200 dark:border-slate-800 text-right">
           <p className="text-xs text-gray-500 dark:text-slate-400">Required Office Days This Month</p>
           <p className="text-xl font-bold text-gray-900 dark:text-white">
-            <span className="text-cyan-500 dark:text-cyan-400">8 Days</span> <span className="text-gray-400 dark:text-slate-500 font-normal text-xs">(2 per week)</span>
+            <span className="text-cyan-500 dark:text-cyan-400">{requiredDays} Days</span>{" "}
+            <span className="text-gray-400 dark:text-slate-500 font-normal text-xs">
+              ({officeDays.length > 0 ? officeDays.map(d => d.substring(0,3)).join(", ") : `${requiredPerWeek} per week`})
+            </span>
           </p>
         </div>
       </div>
