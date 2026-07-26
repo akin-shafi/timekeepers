@@ -12,6 +12,10 @@ export default async function AppLayout({
 }) {
   const user = await getCurrentUser();
 
+  if (!user) {
+    redirect("/auth/signin");
+  }
+
   if (user && user.role !== "SUPER_ADMIN") {
     const dbUser = await db.user.findUnique({
       where: { id: user.id },
