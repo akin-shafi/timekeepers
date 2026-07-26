@@ -38,6 +38,7 @@ export async function getMyProfileAction() {
         workArrangement: user.workArrangement || "HYBRID",
         requiredOfficeDaysPerWeek: user.requiredOfficeDaysPerWeek ?? 2,
         requiredOfficeDaysPerMonth: user.requiredOfficeDaysPerMonth ?? 8,
+        officeDays: user.officeDays || [],
         workingHours: user.workingHours || "09:00 - 17:00",
         dateJoined: user.dateJoined || user.createdAt,
       },
@@ -53,12 +54,16 @@ export async function updateMyProfileAction({
   avatarUrl,
   jobTitle,
   employmentStatus,
+  requiredOfficeDaysPerWeek,
+  officeDays,
 }: {
   name?: string;
   phone?: string;
   avatarUrl?: string;
   jobTitle?: string;
   employmentStatus?: string;
+  requiredOfficeDaysPerWeek?: number;
+  officeDays?: string[];
 }) {
   const authUser = await requireAuth();
 
@@ -83,12 +88,16 @@ export async function updateMyProfileAction({
       avatarUrl?: string | null;
       jobTitle?: string | null;
       employmentStatus?: string;
+      requiredOfficeDaysPerWeek?: number;
+      officeDays?: string[];
     } = {
       ...(trimmedName !== undefined ? { name: trimmedName } : {}),
       ...(phone !== undefined ? { phone: phone.trim() || null } : {}),
       ...(avatarUrl !== undefined ? { avatarUrl: avatarUrl.trim() || null } : {}),
       ...(jobTitle !== undefined ? { jobTitle: jobTitle.trim() || null } : {}),
       ...(employmentStatus !== undefined ? { employmentStatus } : {}),
+      ...(requiredOfficeDaysPerWeek !== undefined ? { requiredOfficeDaysPerWeek } : {}),
+      ...(officeDays !== undefined ? { officeDays } : {}),
     };
 
     await db.user.update({

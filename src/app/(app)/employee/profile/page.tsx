@@ -16,6 +16,8 @@ export default function ProfilePage() {
   const [avatarUrl, setAvatarUrl] = useState("");
   const [jobTitle, setJobTitle] = useState("");
   const [employmentStatus, setEmploymentStatus] = useState("");
+  const [requiredOfficeDaysPerWeek, setRequiredOfficeDaysPerWeek] = useState(2);
+  const [officeDays, setOfficeDays] = useState<string[]>([]);
   const [profile, setProfile] = useState<ProfileData | null>(null);
 
   const [isLoading, setIsLoading] = useState(true);
@@ -34,6 +36,8 @@ export default function ProfilePage() {
           setAvatarUrl(res.data.avatarUrl);
           setJobTitle(res.data.jobTitle);
           setEmploymentStatus(res.data.employmentStatus);
+          setRequiredOfficeDaysPerWeek(res.data.requiredOfficeDaysPerWeek || 2);
+          setOfficeDays(res.data.officeDays || []);
         } else {
           setErrorMsg(res.error || "Failed to load profile.");
         }
@@ -53,7 +57,15 @@ export default function ProfilePage() {
     setErrorMsg("");
 
     try {
-      const res = await updateMyProfileAction({ name, phone, avatarUrl, jobTitle, employmentStatus });
+      const res = await updateMyProfileAction({ 
+        name, 
+        phone, 
+        avatarUrl, 
+        jobTitle, 
+        employmentStatus,
+        requiredOfficeDaysPerWeek,
+        officeDays
+      });
       if (res.success) {
         setSuccessMsg("Profile updated successfully.");
         // Refresh the JWT/session so the Navbar reflects the new name/avatar.
@@ -187,6 +199,35 @@ export default function ProfilePage() {
               ))}
             </select>
           </div>
+          <div>
+            <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-slate-400 mb-1.5">
+              Required Office Days Per Week
+            </label>
+            <input
+              type="number"
+              min="0"
+              max="7"
+              value={requiredOfficeDaysPerWeek}
+              onChange={(e) => setRequiredOfficeDaysPerWeek(parseInt(e.target.value) || 0)}
+              className="w-full bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-xl px-3.5 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500"
+            />
+          </div>
+          <div>
+            <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-slate-400 mb-1.5">
+              Specific Office Days
+            </label>
+            <select
+              multiple
+              value={officeDays}
+              onChange={(e) => setOfficeDays(Array.from(e.target.selectedOptions, option => option.value))}
+              className="w-full bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-xl px-3.5 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500 h-[104px]"
+            >
+              {["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"].map((d) => (
+                <option key={d} value={d}>{d}</option>
+              ))}
+            </select>
+            <p className="text-[10px] text-gray-400 mt-1">Hold Cmd/Ctrl to select multiple</p>
+          </div>
         </div>
 
         <button
@@ -215,9 +256,9 @@ export default function ProfilePage() {
             { label: "Work Arrangement", value: profile?.workArrangement },
             { label: "Working Hours", value: profile?.workingHours },
             {
-              label: "Required Office Days",
+              label: "Required Office Days (Monthly)",
               value: profile
-                ? `${profile.requiredOfficeDaysPerMonth}/month (${profile.requiredOfficeDaysPerWeek}/week)`
+                ? `${profile.requiredOfficeDaysPerMonth}/month`
                 : "",
             },
             {
