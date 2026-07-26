@@ -1,0 +1,482 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  SUPER_ADMIN
+  HR
+  DEPARTMENT_HEAD
+  EMPLOYEE
+}
+
+enum WorkLocation {
+  OFFICE
+  REMOTE
+}
+
+enum AttendanceStatus {
+  NOT_CHECKED_IN
+  CHECKED_IN
+  WORKING
+  CHECKED_OUT
+  REMOTE
+  OFFICE
+  LATE
+  ABSENT
+  ON_LEAVE
+  INCOMPLETE
+  PENDING_APPROVAL
+  APPROVED
+  REJECTED
+}
+
+enum VerificationMethod {
+  GPS_GEOFENCE
+  WIFI_IP
+  SELF_DECLARATION
+}
+
+enum VerificationStatus {
+  VERIFIED
+  UNVERIFIED
+  PENDING_REVIEW
+}
+
+enum CorrectionStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum StipendType {
+  FIXED_MONTHLY
+  PER_OFFICE_DAY
+}
+
+enum PolicyScope {
+  ORGANIZATION
+  DEPARTMENT
+  USER
+}
+
+model Organization {
+  id                                String                     @id @default(uuid())
+  name                              String
+  slug                              String                     @unique
+  allowedDomains                    String[]                   // e.g. ["getrova.com"]
+  timezone                          String                     @default("UTC")
+  workStartTime                     String                     @default("09:00") // HH:mm
+  workEndTime                       String                     @default("17:00") // HH:mm
+  gracePeriodMins                   Int                        @default(15)
+  verificationType                  VerificationMethod         @default(SELF_DECLARATION)
+  hrApprovalRequiredForCorrection  Boolean                    @default(false)
+  createdAt                         DateTime                   @default(now())
+  updatedAt                         DateTime                   @updatedAt
+
+  departments       Department[]
+  memberships       OrganizationMembership[]
+  attendanceRecords AttendanceRecord[]
+  policies          AttendancePolicy[]
+  officeLocations   OfficeLocation[]
+  holidays          Holiday[]
+  leaveRecords      LeaveRecord[]
+  exceptions        AttendanceException[]
+  stipendPolicies   TransportStipendPolicy[]
+  stipendCalculations TransportStipendCalculation[]
+  invitations       Invitation[]
+  notifications     Notification[]
+  auditLogs         AuditLog[]
+
+  @@map("organizations")
+}
+
+model Department {
+  id             String                 @id @default(uuid())
+  organizationId String
+  name           String
+  description    String?
+  createdAt      DateTime               @default(now())
+  updatedAt      DateTime               @updatedAt
+
+  organization   Organization           @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  memberships    DepartmentMembership[]
+  policies       AttendancePolicy[]
+  stipendPolicies TransportStipendPolicy[]
+  invitations    Invitation[]
+  attendanceRecords AttendanceRecord[]
+  groups         Group[]
+
+  @@unique([organizationId, name])
+  @@map("departments")
+}
+
+model User {
+  id                          String                  @id @default(uuid())
+  email                       String                  @unique
+  name                        String?
+  avatarUrl                   String?
+  employeeId                  String?                 @unique
+  jobTitle                    String?
+  phone                       String?
+  dateJoined                  DateTime?
+  employmentStatus            String                  @default("ACTIVE") // ACTIVE, PROBATION, CONTRACT, TERMINATED
+  workArrangement             String                  @default("HYBRID") // HYBRID, REMOTE, OFFICE
+  requiredOfficeDaysPerWeek   Int                     @default(2)
+  requiredOfficeDaysPerMonth  Int                     @default(8)
+  officeDays                  String[]                // e.g. ["TUESDAY", "THURSDAY"]
+  workingHours                String?                 @default("09:00 - 17:00")
+  officeLocationId            String?
+  managerId                   String?
+  isActive                    Boolean                 @default(true)
+  lastLoginAt                 DateTime?
+  createdAt                   DateTime                @default(now())
+  updatedAt                   DateTime                @updatedAt
+
+  orgMemberships       OrganizationMembership[]
+  deptMemberships      DepartmentMembership[]
+  attendanceRecords    AttendanceRecord[]
+  requestedCorrections AttendanceCorrection[] @relation("EmployeeCorrections")
+  reviewedCorrections  AttendanceCorrection[] @relation("ReviewerCorrections")
+  leaveRecords         LeaveRecord[]          @relation("EmployeeLeaves")
+  reviewedLeaves       LeaveRecord[]          @relation("ReviewedLeaves")
+  exceptions           AttendanceException[]  @relation("UserExceptions")
+  resolvedExceptions   AttendanceException[]  @relation("ResolvedExceptions")
+  stipendCalculations  TransportStipendCalculation[]
+  invitationsSent      Invitation[]            @relation("InvitedBy")
+  auditLogs            AuditLog[]
+  groupsManaged        Group[]                 @relation("GroupManager")
+  groupMemberships     GroupMembership[]
+
+  @@map("users")
+}
+
+model OrganizationMembership {
+  id             String       @id @default(uuid())
+  organizationId String
+  userId         String
+  role           Role         @default(EMPLOYEE)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, userId])
+  @@map("organization_memberships")
+}
+
+model DepartmentMembership {
+  id           String     @id @default(uuid())
+  departmentId String
+  userId       String
+  isHead       Boolean    @default(false)
+  createdAt    DateTime   @default(now())
+
+  department   Department @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([departmentId, userId])
+  @@map("department_memberships")
+}
+
+model Invitation {
+  id             String       @id @default(uuid())
+  organizationId String
+  departmentId   String?
+  email          String
+  role           Role         @default(EMPLOYEE)
+  token          String       @unique @default(uuid())
+  status         String       @default("PENDING") // PENDING, ACCEPTED, EXPIRED, REVOKED
+  invitedById    String
+  expiresAt      DateTime
+  createdAt      DateTime     @default(now())
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  department     Department?  @relation(fields: [departmentId], references: [id])
+  invitedBy      User         @relation("InvitedBy", fields: [invitedById], references: [id])
+
+  @@map("invitations")
+}
+
+model OfficeLocation {
+  id             String             @id @default(uuid())
+  organizationId String
+  name           String
+  address        String?
+  latitude       Float
+  longitude      Float
+  radiusMeters   Float              @default(100.0)
+  allowedIPs     String[]           // List of allowed IP ranges or CIDRs
+  allowedSSIDs   String[]           // Approved Wi-Fi SSIDs
+  isActive       Boolean            @default(true)
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+
+  organization   Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  attendanceRecords AttendanceRecord[]
+
+  @@map("office_locations")
+}
+
+model AttendanceRecord {
+  id                 String             @id @default(uuid())
+  organizationId     String
+  departmentId       String?
+  userId             String
+  workDate           DateTime           @db.Date
+  checkInTime        DateTime
+  checkOutTime       DateTime?
+  workLocation       WorkLocation
+  officeLocationId   String?
+  verificationStatus VerificationStatus @default(UNVERIFIED)
+  verificationNotes  String?
+  status             AttendanceStatus   @default(CHECKED_IN)
+  latitude           Float?
+  longitude          Float?
+  checkOutLatitude   Float?
+  checkOutLongitude  Float?
+  checkInLocation    String?
+  checkOutLocation   String?
+  ipAddress          String?
+  deviceInfo         String?
+  hoursWorked        Float              @default(0.0)
+  isLate             Boolean            @default(false)
+  isEarlyDeparture   Boolean            @default(false)
+  
+  // Approval metadata
+  approvalJustification String?
+  approvedAt            DateTime?
+  expectedWorkMode      String?
+
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  organization       Organization       @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  department         Department?        @relation(fields: [departmentId], references: [id])
+  user               User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  officeLocation     OfficeLocation?    @relation(fields: [officeLocationId], references: [id])
+  corrections        AttendanceCorrection[]
+
+  @@unique([userId, workDate])
+  @@index([organizationId, workDate])
+  @@index([departmentId, workDate])
+  @@map("attendance_records")
+}
+
+model AttendanceCorrection {
+  id                 String           @id @default(uuid())
+  attendanceRecordId String?
+  userId             String
+  reviewerId         String?
+  hrReviewerId       String?
+  workDate           DateTime         @db.Date
+  requestedLocation  WorkLocation
+  requestedCheckIn   DateTime
+  requestedCheckOut  DateTime?
+  reason             String
+  status             CorrectionStatus @default(PENDING)
+  hrStatus           CorrectionStatus @default(PENDING)
+  reviewerNotes      String?
+  hrNotes            String?
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+
+  attendanceRecord   AttendanceRecord? @relation(fields: [attendanceRecordId], references: [id])
+  user               User              @relation("EmployeeCorrections", fields: [userId], references: [id], onDelete: Cascade)
+  reviewer           User?             @relation("ReviewerCorrections", fields: [reviewerId], references: [id])
+
+  @@map("attendance_corrections")
+}
+
+model AttendanceException {
+  id             String       @id @default(uuid())
+  organizationId String
+  userId         String
+  workDate       DateTime     @db.Date
+  exceptionType  String       // NO_CHECK_IN, NO_CHECK_OUT, LATE_CHECK_IN, EARLY_DEPARTURE, UNVERIFIED_OFFICE, BELOW_REQUIREMENT, DUPLICATE_RECORD, UNUSUAL_PATTERN
+  description    String
+  status         String       @default("OPEN") // OPEN, UNDER_REVIEW, RESOLVED, DISMISSED
+  hrComments     String?
+  resolvedById   String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user           User         @relation("UserExceptions", fields: [userId], references: [id], onDelete: Cascade)
+  resolvedBy     User?        @relation("ResolvedExceptions", fields: [resolvedById], references: [id])
+
+  @@index([organizationId, status])
+  @@index([userId])
+  @@map("attendance_exceptions")
+}
+
+model AttendancePolicy {
+  id                         String       @id @default(uuid())
+  organizationId             String
+  departmentId               String?
+  userId                     String?
+  scope                      PolicyScope  @default(ORGANIZATION)
+  name                       String
+  requiredOfficeDaysPerWeek  Int          @default(2)
+  requiredOfficeDaysPerMonth Int          @default(8)
+  mandatoryOfficeDays        String[]     // e.g., ["MONDAY", "WEDNESDAY"]
+  isFlexible                 Boolean      @default(true)
+  createdAt                  DateTime     @default(now())
+  updatedAt                  DateTime     @updatedAt
+
+  organization               Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  department                 Department?  @relation(fields: [departmentId], references: [id])
+
+  @@map("attendance_policies")
+}
+
+model Holiday {
+  id             String       @id @default(uuid())
+  organizationId String
+  name           String
+  date           DateTime     @db.Date
+  isRecurring    Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, date])
+  @@map("holidays")
+}
+
+model LeaveRecord {
+  id             String       @id @default(uuid())
+  organizationId String
+  userId         String
+  startDate      DateTime     @db.Date
+  endDate        DateTime     @db.Date
+  daysCount      Int          @default(1)
+  leaveType      String       // Annual, Sick, Casual, Maternity, Paternity, Unpaid
+  reason         String?
+  supportingDoc  String?
+  status         String       @default("PENDING") // PENDING, APPROVED, REJECTED, CANCELLED
+  reviewerId     String?
+  reviewerNotes  String?
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user           User         @relation("EmployeeLeaves", fields: [userId], references: [id], onDelete: Cascade)
+  reviewer       User?        @relation("ReviewedLeaves", fields: [reviewerId], references: [id])
+
+  @@index([organizationId, status])
+  @@map("leave_records")
+}
+
+model TransportStipendPolicy {
+  id                        String       @id @default(uuid())
+  organizationId            String
+  departmentId              String?
+  name                      String
+  stipendType               StipendType  @default(PER_OFFICE_DAY)
+  ratePerOfficeDay          Float        @default(0.0)
+  fixedMonthlyStipend       Float        @default(0.0)
+  maxMonthlyStipend         Float?
+  minRequiredAttendanceDays Int          @default(0)
+  excludePublicHolidays     Boolean      @default(true)
+  excludeLeaveDays          Boolean      @default(true)
+  createdAt                 DateTime     @default(now())
+  updatedAt                 DateTime     @updatedAt
+
+  organization              Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  department                Department?  @relation(fields: [departmentId], references: [id])
+
+  @@map("transport_stipend_policies")
+}
+
+model TransportStipendCalculation {
+  id                    String       @id @default(uuid())
+  organizationId        String
+  userId                String
+  year                  Int
+  month                 Int          // 1 - 12
+  requiredOfficeDays    Int
+  actualOfficeDays      Int
+  eligibleOfficeDays    Int
+  remoteDays            Int
+  absentDays            Int
+  leaveDays             Int
+  calculatedStipend     Float
+  status                String       @default("DRAFT") // DRAFT, FINALIZED, PAID
+  createdAt             DateTime     @default(now())
+  updatedAt             DateTime     @updatedAt
+
+  organization          Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user                  User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, userId, year, month])
+  @@map("transport_stipend_calculations")
+}
+
+model Notification {
+  id             String       @id @default(uuid())
+  organizationId String?
+  userId         String
+  title          String
+  message        String
+  type           String       // CHECKIN, CORRECTION, INVITATION, LATE, LEAVE, EXCEPTION
+  isRead         Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
+}
+
+model AuditLog {
+  id             String       @id @default(uuid())
+  organizationId String
+  userId         String?
+  action         String       // e.g. "USER_INVITED", "POLICY_UPDATED", "CORRECTION_APPROVED", "LEAVE_APPROVED", "EXCEPTION_RESOLVED"
+  entity         String       // e.g. "AttendanceCorrection", "Department", "LeaveRecord", "AttendanceException"
+  entityId       String?
+  previousValue  Json?
+  newValue       Json?
+  ipAddress      String?
+  createdAt      DateTime     @default(now())
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user           User?        @relation(fields: [userId], references: [id])
+
+  @@map("audit_logs")
+}
+
+model Group {
+  id             String            @id @default(uuid())
+  departmentId   String
+  name           String
+  description    String?
+  managerId      String?           // The delegated approver for this group
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  department     Department        @relation(fields: [departmentId], references: [id], onDelete: Cascade)
+  manager        User?             @relation("GroupManager", fields: [managerId], references: [id])
+  memberships    GroupMembership[]
+
+  @@unique([departmentId, name])
+  @@map("groups")
+}
+
+model GroupMembership {
+  id        String   @id @default(uuid())
+  groupId   String
+  userId    String
+  createdAt DateTime @default(now())
+
+  group     Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([groupId, userId])
+  @@map("group_memberships")
+}
