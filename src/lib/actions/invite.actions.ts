@@ -77,7 +77,6 @@ export async function acceptInvitationAction(
           jobTitle: data.jobTitle,
           phone: data.phone,
           isActive: true,
-          dateJoined: new Date(),
         },
         create: {
           email: invite.email,
@@ -252,6 +251,17 @@ export async function inviteUsersBulkAction({
       )
     );
 
+    // Fetch existing users in this organization to prevent duplicate invitations
+    const existingMemberships = await db.organizationMembership.findMany({
+      where: {
+        organizationId: targetOrgId,
+        user: { email: { in: uniqueEmails } },
+      },
+      include: { user: true },
+    });
+    
+    const existingEmails = new Set(existingMemberships.map((m) => m.user.email));
+
     for (const email of uniqueEmails) {
       const domain = email.split("@")[1];
 
@@ -263,6 +273,16 @@ export async function inviteUsersBulkAction({
         });
         continue;
       }
+
+      // Existing member check
+      if (existingEmails.has(email)) {
+        failedEmails.push({
+          email,
+          error: "User is already a member of this organization.",
+        });
+        continue;
+      }
+
 
       try {
         // Create invitation
