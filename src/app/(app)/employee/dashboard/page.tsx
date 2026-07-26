@@ -33,6 +33,8 @@ export default function EmployeeDashboard() {
   const [showOverrideModal, setShowOverrideModal] = useState<boolean>(false);
   const [overrideReason, setOverrideReason] = useState<string>("");
   const [expectedLocation, setExpectedLocation] = useState<string>("");
+  const [gpsError, setGpsError] = useState<string>("");
+
   const checkWorkingDay = async () => {
     try {
       const res = await checkIfWorkingDayAction();
@@ -128,9 +130,15 @@ export default function EmployeeDashboard() {
           const lng = pos.coords.longitude;
           setCoords({ lat, lng });
           getAddress(lat, lng);
+          setGpsError("");
         },
-        (err) => console.log("Geolocation disabled or unavailable", err.message)
+        (err) => {
+          console.log("Geolocation disabled or unavailable", err.message);
+          setGpsError("Location access denied or unavailable.");
+        }
       );
+    } else {
+      setGpsError("Geolocation is not supported by your browser.");
     }
   }, []);
 
@@ -311,6 +319,10 @@ export default function EmployeeDashboard() {
                     <span className="text-emerald-600 dark:text-emerald-400 font-mono font-medium">
                       GPS ({coords.lat.toFixed(4)}, {coords.lng.toFixed(4)})
                     </span>
+                  ) : gpsError ? (
+                    <span className="text-red-500 dark:text-red-400 font-medium">
+                      {gpsError}
+                    </span>
                   ) : (
                     <span className="text-amber-500 dark:text-amber-400 font-medium animate-pulse">
                       Awaiting GPS Access...
@@ -342,7 +354,7 @@ export default function EmployeeDashboard() {
                 disabled={isSubmitting || isLoading || coords.lat === undefined}
                 className="w-full py-4 rounded-2xl font-bold text-base text-white bg-gradient-to-r from-brand-600 to-cyan-500 hover:from-brand-500 hover:to-cyan-400 active:scale-[0.99] transition-all shadow-xl shadow-brand-500/25 disabled:opacity-50 pulse-glow"
               >
-                {coords.lat === undefined ? "Waiting for Location..." : isSubmitting ? "Recording Check-In..." : `Check In as ${workLocation === "OFFICE" ? "Office" : "Remote"}`}
+                {coords.lat === undefined ? (gpsError ? "Location Access Required" : "Waiting for Location...") : isSubmitting ? "Recording Check-In..." : `Check In as ${workLocation === "OFFICE" ? "Office" : "Remote"}`}
               </button>
             </div>
           ) : !todayRecord.checkOutTime ? (
@@ -371,7 +383,7 @@ export default function EmployeeDashboard() {
                 disabled={isSubmitting || coords.lat === undefined}
                 className="w-full py-4 rounded-2xl font-bold text-base text-white bg-red-600 hover:bg-red-500 active:scale-[0.99] transition-all shadow-xl shadow-red-600/30 disabled:opacity-50"
               >
-                {coords.lat === undefined ? "Waiting for Location..." : isSubmitting ? "Recording Check-Out..." : "Check Out For Today"}
+                {coords.lat === undefined ? (gpsError ? "Location Access Required" : "Waiting for Location...") : isSubmitting ? "Recording Check-Out..." : "Check Out For Today"}
               </button>
             </div>
           ) : (

@@ -132,7 +132,9 @@ export async function checkInAction(payload: CheckInPayload) {
       workLocation: payload.workLocation,
       officeLocationId: officeLocId,
       verificationStatus,
-      verificationNotes,
+      verificationNotes: payload.overrideReason
+        ? [verificationNotes, `Location Override Reason: ${payload.overrideReason}`].filter(Boolean).join(" | ")
+        : verificationNotes,
       status: initialStatus,
       latitude: payload.latitude,
       longitude: payload.longitude,
@@ -140,7 +142,6 @@ export async function checkInAction(payload: CheckInPayload) {
       ipAddress: payload.ipAddress,
       deviceInfo: payload.deviceInfo,
       isLate,
-      notes: payload.overrideReason ? `Location Override Reason: ${payload.overrideReason}` : null,
     },
   });
 
