@@ -339,10 +339,10 @@ export default function EmployeeDashboard() {
                     handleCheckIn();
                   }
                 }}
-                disabled={isSubmitting || isLoading}
+                disabled={isSubmitting || isLoading || coords.lat === undefined}
                 className="w-full py-4 rounded-2xl font-bold text-base text-white bg-gradient-to-r from-brand-600 to-cyan-500 hover:from-brand-500 hover:to-cyan-400 active:scale-[0.99] transition-all shadow-xl shadow-brand-500/25 disabled:opacity-50 pulse-glow"
               >
-                {isSubmitting ? "Recording Check-In..." : `Check In as ${workLocation === "OFFICE" ? "Office" : "Remote"}`}
+                {coords.lat === undefined ? "Waiting for Location..." : isSubmitting ? "Recording Check-In..." : `Check In as ${workLocation === "OFFICE" ? "Office" : "Remote"}`}
               </button>
             </div>
           ) : !todayRecord.checkOutTime ? (
@@ -368,10 +368,10 @@ export default function EmployeeDashboard() {
 
               <button
                 onClick={handleCheckOut}
-                disabled={isSubmitting}
+                disabled={isSubmitting || coords.lat === undefined}
                 className="w-full py-4 rounded-2xl font-bold text-base text-white bg-red-600 hover:bg-red-500 active:scale-[0.99] transition-all shadow-xl shadow-red-600/30 disabled:opacity-50"
               >
-                {isSubmitting ? "Recording Check-Out..." : "Check Out For Today"}
+                {coords.lat === undefined ? "Waiting for Location..." : isSubmitting ? "Recording Check-Out..." : "Check Out For Today"}
               </button>
             </div>
           ) : (
