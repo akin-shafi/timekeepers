@@ -384,9 +384,13 @@ export function InviteSection({
         <h3 className="text-base font-bold text-gray-900 dark:text-white flex items-center gap-2">
           <Shield className="h-5 w-5 text-emerald-500" /> Pending Invitations ({pendingInvitations.length})
         </h3>
-        <p className="text-xs text-gray-500 dark:text-slate-400">
-          Actively generated onboarding links waiting to be accepted. Copy and share with the user.
-        </p>
+        
+        <div className="p-3 bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 rounded-xl flex items-start gap-2.5">
+          <Shield className="h-4 w-4 text-amber-500 mt-0.5 shrink-0" />
+          <p className="text-xs text-amber-700 dark:text-amber-400">
+            <strong>Important:</strong> Each link is unique to the specific email and can only be used once. Do not share a single link in group chats. Users will automatically receive their own personal links via email.
+          </p>
+        </div>
 
         <div className="overflow-y-auto max-h-[380px] space-y-3 pr-1">
           {pendingInvitations.length === 0 ? (
