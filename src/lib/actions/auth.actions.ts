@@ -67,15 +67,10 @@ export async function registerUserAction({
       },
     });
 
-    if (
-      existingUser &&
-      existingUser.isActive &&
-      existingUser.orgMemberships.length > 0 &&
-      existingUser.deptMemberships.length > 0
-    ) {
+    if (existingUser && existingUser.orgMemberships.length > 0) {
       return {
         success: false,
-        error: "An active account with this email address already exists.",
+        error: "An account with this email address already exists. Please sign in instead.",
       };
     }
 
@@ -91,7 +86,6 @@ export async function registerUserAction({
           requiredOfficeDaysPerWeek,
           requiredOfficeDaysPerMonth,
           isActive: true,
-          dateJoined: new Date(),
         },
         create: {
           email: cleanEmail,
