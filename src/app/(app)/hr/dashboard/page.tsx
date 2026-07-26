@@ -1,4 +1,5 @@
 import React from "react";
+import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth/guard";
 import { getHRDashboardMetricsAction } from "@/lib/actions/hr.actions";
 import { db } from "@/lib/db";
@@ -34,6 +35,9 @@ export default async function HRDashboardPage({
     where: { organizationId: hrUser.organizationId },
     select: { id: true, name: true },
   });
+
+  const cardClass =
+    "glass-card p-5 rounded-3xl border border-gray-200 dark:border-slate-800 space-y-1 group hover:border-gray-300 dark:hover:border-slate-600 hover:shadow-lg transition-all duration-200 cursor-pointer";
 
   return (
     <div className="space-y-8">
@@ -89,85 +93,95 @@ export default async function HRDashboardPage({
 
       {/* Summary Cards Grid */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
-        <div className="glass-card p-5 rounded-3xl border border-gray-200 dark:border-slate-800 space-y-1">
+        {/* Total Employees → /hr/employees */}
+        <Link href="/hr/employees" className={cardClass}>
           <p className="text-xs text-gray-500 dark:text-slate-400 flex items-center gap-1.5">
             <Users className="h-3.5 w-3.5 text-blue-500 dark:text-blue-400" /> Total Employees
           </p>
-          <p className="text-3xl font-extrabold text-gray-900 dark:text-white">{metrics.totalEmployees}</p>
+          <p className="text-3xl font-extrabold text-gray-900 dark:text-white group-hover:text-blue-500 dark:group-hover:text-blue-400 transition-colors">{metrics.totalEmployees}</p>
           <p className="text-[11px] text-gray-400 dark:text-slate-500">{metrics.activeEmployees} active workforce</p>
-        </div>
+        </Link>
 
-        <div className="glass-card p-5 rounded-3xl border border-gray-200 dark:border-slate-800 space-y-1">
+        {/* Present Today → /hr/attendance */}
+        <Link href="/hr/attendance" className={cardClass}>
           <p className="text-xs text-gray-500 dark:text-slate-400 flex items-center gap-1.5">
             <UserCheck className="h-3.5 w-3.5 text-emerald-500 dark:text-emerald-400" /> Present Today
           </p>
           <p className="text-3xl font-extrabold text-emerald-500 dark:text-emerald-400">{metrics.presentToday}</p>
           <p className="text-[11px] text-gray-400 dark:text-slate-500">Checked in today</p>
-        </div>
+        </Link>
 
-        <div className="glass-card p-5 rounded-3xl border border-gray-200 dark:border-slate-800 space-y-1">
+        {/* Working from Office → /hr/attendance?workLocation=OFFICE */}
+        <Link href="/hr/attendance?workLocation=OFFICE" className={cardClass}>
           <p className="text-xs text-gray-500 dark:text-slate-400 flex items-center gap-1.5">
             <Building className="h-3.5 w-3.5 text-brand-500 dark:text-brand-400" /> Working from Office
           </p>
           <p className="text-3xl font-extrabold text-brand-500 dark:text-brand-400">{metrics.workingFromOffice}</p>
           <p className="text-[11px] text-gray-400 dark:text-slate-500">Geofence verified</p>
-        </div>
+        </Link>
 
-        <div className="glass-card p-5 rounded-3xl border border-gray-200 dark:border-slate-800 space-y-1">
+        {/* Working Remotely → /hr/attendance?workLocation=REMOTE */}
+        <Link href="/hr/attendance?workLocation=REMOTE" className={cardClass}>
           <p className="text-xs text-gray-500 dark:text-slate-400 flex items-center gap-1.5">
             <Laptop className="h-3.5 w-3.5 text-cyan-500 dark:text-cyan-400" /> Working Remotely
           </p>
           <p className="text-3xl font-extrabold text-cyan-500 dark:text-cyan-400">{metrics.workingRemotely}</p>
           <p className="text-[11px] text-gray-400 dark:text-slate-500">Approved remote</p>
-        </div>
+        </Link>
 
-        <div className="glass-card p-5 rounded-3xl border border-gray-200 dark:border-slate-800 space-y-1">
+        {/* Not Checked In → /hr/exceptions */}
+        <Link href="/hr/exceptions" className={cardClass}>
           <p className="text-xs text-gray-500 dark:text-slate-400 flex items-center gap-1.5">
             <Clock className="h-3.5 w-3.5 text-amber-500 dark:text-amber-400" /> Not Checked In
           </p>
           <p className="text-3xl font-extrabold text-amber-500 dark:text-amber-400">{metrics.notCheckedIn}</p>
           <p className="text-[11px] text-gray-400 dark:text-slate-500">Pending check-in</p>
-        </div>
+        </Link>
 
-        <div className="glass-card p-5 rounded-3xl border border-gray-200 dark:border-slate-800 space-y-1">
+        {/* Absent Today → /hr/attendance */}
+        <Link href="/hr/attendance" className={cardClass}>
           <p className="text-xs text-gray-500 dark:text-slate-400 flex items-center gap-1.5">
             <UserX className="h-3.5 w-3.5 text-rose-500 dark:text-rose-400" /> Absent Today
           </p>
           <p className="text-3xl font-extrabold text-rose-500 dark:text-rose-400">{metrics.absent}</p>
-          <p className="text-[11px] text-gray-400 dark:text-slate-500">No record & no leave</p>
-        </div>
+          <p className="text-[11px] text-gray-400 dark:text-slate-500">No record &amp; no leave</p>
+        </Link>
 
-        <div className="glass-card p-5 rounded-3xl border border-gray-200 dark:border-slate-800 space-y-1">
+        {/* On Leave → /hr/leave */}
+        <Link href="/hr/leave" className={cardClass}>
           <p className="text-xs text-gray-500 dark:text-slate-400 flex items-center gap-1.5">
             <CalendarDays className="h-3.5 w-3.5 text-purple-500 dark:text-purple-400" /> On Leave
           </p>
           <p className="text-3xl font-extrabold text-purple-500 dark:text-purple-400">{metrics.onLeave}</p>
           <p className="text-[11px] text-gray-400 dark:text-slate-500">Approved leave</p>
-        </div>
+        </Link>
 
-        <div className="glass-card p-5 rounded-3xl border border-gray-200 dark:border-slate-800 space-y-1">
+        {/* Late Employees → /hr/exceptions */}
+        <Link href="/hr/exceptions" className={cardClass}>
           <p className="text-xs text-gray-500 dark:text-slate-400 flex items-center gap-1.5">
             <AlertTriangle className="h-3.5 w-3.5 text-amber-500 dark:text-amber-400" /> Late Employees
           </p>
           <p className="text-3xl font-extrabold text-amber-500 dark:text-amber-400">{metrics.late}</p>
           <p className="text-[11px] text-gray-400 dark:text-slate-500">Past grace period</p>
-        </div>
+        </Link>
 
-        <div className="glass-card p-5 rounded-3xl border border-gray-200 dark:border-slate-800 space-y-1 col-span-2 sm:col-span-1">
+        {/* Attendance Compliance → /hr/compliance */}
+        <Link href="/hr/compliance" className={`${cardClass} col-span-2 sm:col-span-1`}>
           <p className="text-xs text-gray-500 dark:text-slate-400 flex items-center gap-1.5">
             <TrendingUp className="h-3.5 w-3.5 text-emerald-500 dark:text-emerald-400" /> Attendance Compliance
           </p>
           <p className="text-3xl font-extrabold text-emerald-500 dark:text-emerald-400">{metrics.attendanceRate}%</p>
           <p className="text-[11px] text-gray-400 dark:text-slate-500">Overall workforce rate</p>
-        </div>
+        </Link>
 
-        <div className="glass-card p-5 rounded-3xl border border-gray-200 dark:border-slate-800 space-y-1 col-span-2 sm:col-span-1">
+        {/* Office Compliance → /hr/work-arrangements */}
+        <Link href="/hr/work-arrangements" className={`${cardClass} col-span-2 sm:col-span-1`}>
           <p className="text-xs text-gray-500 dark:text-slate-400 flex items-center gap-1.5">
             <Building className="h-3.5 w-3.5 text-brand-500 dark:text-brand-400" /> Office Compliance
           </p>
           <p className="text-3xl font-extrabold text-brand-500 dark:text-brand-400">{metrics.officeComplianceRate}%</p>
           <p className="text-[11px] text-gray-400 dark:text-slate-500">Target hybrid requirement</p>
-        </div>
+        </Link>
       </div>
 
       {/* Example Visual Widget */}
