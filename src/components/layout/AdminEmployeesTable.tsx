@@ -1,8 +1,9 @@
 "use client";
 
 import React, { useTransition, useState } from "react";
+import Link from "next/link";
 import { ColumnDef } from "@tanstack/react-table";
-import { Shield, RefreshCw } from "lucide-react";
+import { Shield, RefreshCw, Eye } from "lucide-react";
 import { updateUserRoleAction } from "@/lib/actions/admin.actions";
 import { Avatar } from "@/components/layout/Avatar";
 import { DataTable } from "@/components/ui/DataTable";
@@ -111,12 +112,18 @@ export function AdminEmployeesTable({ users }: AdminEmployeesTableProps) {
     },
     {
       id: "actions",
-      header: "Actions / Update Role",
+      header: "Actions",
       cell: ({ row }) => {
         const u = row.original;
         const currentRole = u.orgMemberships[0]?.role || "EMPLOYEE";
         return (
           <div className="flex items-center gap-2">
+            <Link
+              href={`/admin/employees/${u.id}`}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-500/10 hover:bg-purple-500/20 text-purple-400 text-xs font-semibold transition-colors border border-purple-500/20"
+            >
+              <Eye className="h-3.5 w-3.5" /> View
+            </Link>
             <select
               defaultValue={currentRole}
               onChange={(e) => handleRoleUpdate(u.id, e.target.value as any)}

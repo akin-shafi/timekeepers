@@ -1,29 +1,25 @@
 import React from "react";
 import Link from "next/link";
-import { getCurrentUser } from "@/lib/auth/guard";
+import { requireSuperAdmin } from "@/lib/auth/guard";
 import { getHREmployeeProfileAction } from "@/lib/actions/hr.actions";
 import {
   User,
-  Building,
   Briefcase,
   Calendar,
   Clock,
   ArrowLeft,
   CheckCircle,
-  MapPin,
-  FileCheck,
-  Banknote,
+  Shield,
 } from "lucide-react";
 import { Avatar } from "@/components/layout/Avatar";
 import { HREmployeeEditForm } from "@/components/layout/HREmployeeEditForm";
 
-export default async function HREmployeeProfilePage({
+export default async function AdminEmployeeProfilePage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const hrUser = await getCurrentUser();
-  if (!hrUser) return null;
+  await requireSuperAdmin();
 
   const { id } = await params;
   const profile = await getHREmployeeProfileAction(id);
@@ -39,7 +35,7 @@ export default async function HREmployeeProfilePage({
       {/* Navigation Top Bar */}
       <div>
         <Link
-          href="/hr/employees"
+          href="/admin/employees"
           className="inline-flex items-center gap-2 text-xs font-semibold text-gray-500 dark:text-slate-400 hover:text-white transition-colors"
         >
           <ArrowLeft className="h-4 w-4" /> Back to Employee Directory
@@ -49,34 +45,51 @@ export default async function HREmployeeProfilePage({
       {/* Main Profile Header */}
       <div className="glass-panel p-6 rounded-3xl border border-gray-200 dark:border-slate-800 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
         <div className="flex items-center gap-4">
-          <Avatar src={profile.user.avatarUrl} name={profile.user.name} email={profile.user.email} className="w-16 h-16 rounded-2xl bg-gray-100 dark:bg-slate-800 border border-gray-300 dark:border-slate-700 object-cover" />
+          <Avatar
+            src={profile.user.avatarUrl}
+            name={profile.user.name}
+            email={profile.user.email}
+            className="w-16 h-16 rounded-2xl bg-gray-100 dark:bg-slate-800 border border-gray-300 dark:border-slate-700 object-cover"
+          />
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="text-2xl font-extrabold text-gray-900 dark:text-white">{profile.user.name}</h1>
+              <h1 className="text-2xl font-extrabold text-gray-900 dark:text-white">
+                {profile.user.name}
+              </h1>
               <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">
                 {profile.user.employmentStatus}
+              </span>
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-purple-500/10 text-purple-400 border border-purple-500/30 flex items-center gap-1">
+                <Shield className="h-3 w-3" /> {profile.user.role}
               </span>
             </div>
             <p className="text-xs text-gray-500 dark:text-slate-400 mt-1">
               {profile.user.jobTitle} • {profile.user.department} Department
             </p>
-            <p className="text-[11px] font-mono text-cyan-300 mt-0.5">ID: {profile.user.employeeId}</p>
+            <p className="text-[11px] font-mono text-cyan-300 mt-0.5">
+              ID: {profile.user.employeeId}
+            </p>
           </div>
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
           <div className="bg-gray-100 dark:bg-slate-900/80 px-4 py-2 rounded-2xl border border-gray-200 dark:border-slate-800 text-center">
             <p className="text-[11px] text-gray-500 dark:text-slate-400">Compliance</p>
-            <p className="text-lg font-bold text-emerald-400">{profile.attendanceSummary.compliancePercent}%</p>
+            <p className="text-lg font-bold text-emerald-400">
+              {profile.attendanceSummary.compliancePercent}%
+            </p>
           </div>
-
           <div className="bg-gray-100 dark:bg-slate-900/80 px-4 py-2 rounded-2xl border border-gray-200 dark:border-slate-800 text-center">
-            <p className="text-[11px] text-gray-500 dark:text-slate-400">Work Arrangement</p>
-            <p className="text-sm font-bold text-purple-300">{profile.workArrangement.arrangement}</p>
+            <p className="text-[11px] text-gray-500 dark:text-slate-400">Arrangement</p>
+            <p className="text-sm font-bold text-purple-300">
+              {profile.workArrangement.arrangement}
+            </p>
           </div>
 
+          {/* Super Admin can edit email */}
           <HREmployeeEditForm
             userId={profile.user.id}
+            canEditEmail={true}
             initial={{
               name: profile.user.name,
               email: profile.user.email,
@@ -98,19 +111,24 @@ export default async function HREmployeeProfilePage({
           <h2 className="text-sm font-bold text-gray-900 dark:text-white flex items-center gap-2 border-b border-gray-200 dark:border-slate-800 pb-3">
             <User className="h-4 w-4 text-emerald-400" /> Basic & Contact Information
           </h2>
-
           <div className="grid grid-cols-2 gap-4 text-xs">
             <div>
               <p className="text-gray-400 dark:text-slate-500">Email Address</p>
-              <p className="font-medium text-gray-700 dark:text-slate-200 mt-0.5">{profile.user.email}</p>
+              <p className="font-medium text-gray-700 dark:text-slate-200 mt-0.5 break-all">
+                {profile.user.email}
+              </p>
             </div>
             <div>
               <p className="text-gray-400 dark:text-slate-500">Phone Number</p>
-              <p className="font-medium text-gray-700 dark:text-slate-200 mt-0.5">{profile.user.phone}</p>
+              <p className="font-medium text-gray-700 dark:text-slate-200 mt-0.5">
+                {profile.user.phone}
+              </p>
             </div>
             <div>
               <p className="text-gray-400 dark:text-slate-500">System Role</p>
-              <p className="font-medium text-gray-700 dark:text-slate-200 mt-0.5">{profile.user.role}</p>
+              <p className="font-medium text-gray-700 dark:text-slate-200 mt-0.5">
+                {profile.user.role}
+              </p>
             </div>
             <div>
               <p className="text-gray-400 dark:text-slate-500">Date Joined</p>
@@ -125,12 +143,11 @@ export default async function HREmployeeProfilePage({
           </div>
         </div>
 
-        {/* Work Arrangement Details */}
+        {/* Work Arrangement */}
         <div className="glass-card p-6 rounded-3xl border border-gray-200 dark:border-slate-800 space-y-4">
           <h2 className="text-sm font-bold text-gray-900 dark:text-white flex items-center gap-2 border-b border-gray-200 dark:border-slate-800 pb-3">
             <Briefcase className="h-4 w-4 text-purple-400" /> Work Arrangement & Requirements
           </h2>
-
           <div className="grid grid-cols-2 gap-4 text-xs">
             <div>
               <p className="text-gray-400 dark:text-slate-500">Required Office Days / Week</p>
@@ -152,7 +169,9 @@ export default async function HREmployeeProfilePage({
             </div>
             <div>
               <p className="text-gray-400 dark:text-slate-500">Standard Working Hours</p>
-              <p className="font-medium text-gray-700 dark:text-slate-200 mt-0.5">{profile.workArrangement.workingHours}</p>
+              <p className="font-medium text-gray-700 dark:text-slate-200 mt-0.5">
+                {profile.workArrangement.workingHours}
+              </p>
             </div>
           </div>
         </div>
@@ -163,44 +182,29 @@ export default async function HREmployeeProfilePage({
         <h2 className="text-sm font-bold text-gray-900 dark:text-white flex items-center gap-2 border-b border-gray-200 dark:border-slate-800 pb-3">
           <Clock className="h-4 w-4 text-cyan-400" /> Attendance Summary (Last 30 Working Days)
         </h2>
-
         <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3 text-center">
-          <div className="bg-gray-50 dark:bg-slate-900/60 p-3 rounded-2xl border border-gray-200 dark:border-slate-800">
-            <p className="text-[11px] text-gray-500 dark:text-slate-400">Office Days</p>
-            <p className="text-xl font-bold text-brand-400">{profile.attendanceSummary.officeDays}</p>
-          </div>
-          <div className="bg-gray-50 dark:bg-slate-900/60 p-3 rounded-2xl border border-gray-200 dark:border-slate-800">
-            <p className="text-[11px] text-gray-500 dark:text-slate-400">Remote Days</p>
-            <p className="text-xl font-bold text-cyan-400">{profile.attendanceSummary.remoteDays}</p>
-          </div>
-          <div className="bg-gray-50 dark:bg-slate-900/60 p-3 rounded-2xl border border-gray-200 dark:border-slate-800">
-            <p className="text-[11px] text-gray-500 dark:text-slate-400">Late Arrivals</p>
-            <p className="text-xl font-bold text-amber-400">{profile.attendanceSummary.lateDays}</p>
-          </div>
-          <div className="bg-gray-50 dark:bg-slate-900/60 p-3 rounded-2xl border border-gray-200 dark:border-slate-800">
-            <p className="text-[11px] text-gray-500 dark:text-slate-400">Absent Days</p>
-            <p className="text-xl font-bold text-rose-400">{profile.attendanceSummary.absentDays}</p>
-          </div>
-          <div className="bg-gray-50 dark:bg-slate-900/60 p-3 rounded-2xl border border-gray-200 dark:border-slate-800">
-            <p className="text-[11px] text-gray-500 dark:text-slate-400">Leave Days</p>
-            <p className="text-xl font-bold text-purple-400">{profile.attendanceSummary.leaveDays}</p>
-          </div>
-          <div className="bg-gray-50 dark:bg-slate-900/60 p-3 rounded-2xl border border-gray-200 dark:border-slate-800">
-            <p className="text-[11px] text-gray-500 dark:text-slate-400">Avg Hours/Day</p>
-            <p className="text-xl font-bold text-emerald-400">{profile.attendanceSummary.averageHoursPerDay} hrs</p>
-          </div>
-          <div className="bg-gray-50 dark:bg-slate-900/60 p-3 rounded-2xl border border-gray-200 dark:border-slate-800">
-            <p className="text-[11px] text-gray-500 dark:text-slate-400">Compliance Rate</p>
-            <p className="text-xl font-bold text-emerald-400">{profile.attendanceSummary.compliancePercent}%</p>
-          </div>
+          {[
+            { label: "Office Days", value: profile.attendanceSummary.officeDays, color: "text-brand-400" },
+            { label: "Remote Days", value: profile.attendanceSummary.remoteDays, color: "text-cyan-400" },
+            { label: "Late Arrivals", value: profile.attendanceSummary.lateDays, color: "text-amber-400" },
+            { label: "Absent Days", value: profile.attendanceSummary.absentDays, color: "text-rose-400" },
+            { label: "Leave Days", value: profile.attendanceSummary.leaveDays, color: "text-purple-400" },
+            { label: "Avg Hours/Day", value: `${profile.attendanceSummary.averageHoursPerDay} hrs`, color: "text-emerald-400" },
+            { label: "Compliance Rate", value: `${profile.attendanceSummary.compliancePercent}%`, color: "text-emerald-400" },
+          ].map(({ label, value, color }) => (
+            <div key={label} className="bg-gray-50 dark:bg-slate-900/60 p-3 rounded-2xl border border-gray-200 dark:border-slate-800">
+              <p className="text-[11px] text-gray-500 dark:text-slate-400">{label}</p>
+              <p className={`text-xl font-bold ${color}`}>{value}</p>
+            </div>
+          ))}
         </div>
       </div>
 
-      {/* Stipend Summary Card */}
+      {/* Stipend Summary (Super Admin view) */}
       {profile.stipendCalculations.length > 0 && (
         <div className="glass-card p-6 rounded-3xl border border-gray-200 dark:border-slate-800 space-y-4">
           <h2 className="text-sm font-bold text-gray-900 dark:text-white flex items-center gap-2 border-b border-gray-200 dark:border-slate-800 pb-3">
-            <Banknote className="h-4 w-4 text-emerald-400" /> Transport Stipend Summary
+            <CheckCircle className="h-4 w-4 text-emerald-400" /> Transport Stipend Summary
           </h2>
           <div className="flex flex-wrap gap-4">
             <div className="bg-emerald-500/10 border border-emerald-500/30 rounded-2xl px-5 py-3 text-center">
@@ -211,48 +215,19 @@ export default async function HREmployeeProfilePage({
             </div>
             <div className="bg-gray-50 dark:bg-slate-900/60 border border-gray-200 dark:border-slate-800 rounded-2xl px-5 py-3 text-center">
               <p className="text-[11px] text-gray-500 dark:text-slate-400">Months Calculated</p>
-              <p className="text-2xl font-extrabold text-gray-900 dark:text-white mt-0.5">
+              <p className="text-2xl font-extrabold text-white mt-0.5">
                 {profile.stipendCalculations.length}
               </p>
             </div>
             <div className="bg-gray-50 dark:bg-slate-900/60 border border-gray-200 dark:border-slate-800 rounded-2xl px-5 py-3 text-center">
               <p className="text-[11px] text-gray-500 dark:text-slate-400">Last Calculated</p>
-              <p className="text-sm font-bold text-gray-900 dark:text-white mt-0.5">
+              <p className="text-sm font-bold text-white mt-0.5">
                 {new Date(profile.stipendCalculations[0].createdAt).toLocaleDateString("en-US", {
                   month: "short",
                   year: "numeric",
                 })}
               </p>
             </div>
-          </div>
-
-          {/* Per-month breakdown */}
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs text-gray-600 dark:text-slate-300">
-              <thead className="bg-gray-100 dark:bg-slate-900/80 text-[11px] uppercase tracking-wider text-gray-500 dark:text-slate-400 font-semibold">
-                <tr>
-                  <th className="px-4 py-3">Period</th>
-                  <th className="px-4 py-3">Office Days</th>
-                  <th className="px-4 py-3">Stipend Amount</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-200 dark:divide-slate-800/60">
-                {profile.stipendCalculations.map((s: any) => (
-                  <tr key={s.id} className="hover:bg-slate-800/30 transition-colors">
-                    <td className="px-4 py-3 font-mono">
-                      {new Date(s.year, s.month - 1).toLocaleDateString("en-US", {
-                        month: "long",
-                        year: "numeric",
-                      })}
-                    </td>
-                    <td className="px-4 py-3">{s.officeDaysCount} days</td>
-                    <td className="px-4 py-3 font-bold text-emerald-400">
-                      ₦{(s.stipendAmount || 0).toLocaleString()}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
           </div>
         </div>
       )}
@@ -264,7 +239,6 @@ export default async function HREmployeeProfilePage({
             <Calendar className="h-4 w-4 text-brand-400" /> Complete Attendance History
           </h3>
         </div>
-
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs text-gray-600 dark:text-slate-300">
             <thead className="bg-gray-100 dark:bg-slate-900/80 text-gray-500 dark:text-slate-400 font-semibold border-b border-gray-200 dark:border-slate-800 uppercase tracking-wider text-[11px]">
@@ -287,63 +261,46 @@ export default async function HREmployeeProfilePage({
                   </td>
                 </tr>
               ) : (
-                profile.attendanceHistory.map((rec, index) => {
-                  const date = new Date(rec.workDate);
-                  const weekdays = ["SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"];
-                  const dayName = weekdays[date.getDay()];
-                  const arrangement = profile.workArrangement.arrangement;
-                  const officeDays = profile.workArrangement.officeDays || [];
-
-                  let expected = "REMOTE";
-                  if (arrangement === "OFFICE") {
-                    expected = "OFFICE";
-                  } else if (arrangement === "HYBRID") {
-                    expected = officeDays.includes(dayName) ? "OFFICE" : "REMOTE";
-                  }
-
-                  const isMismatchedRemote = rec.workLocation === "REMOTE" && expected === "OFFICE";
-
-                  return (
-                    <tr key={rec.id} className="hover:bg-slate-800/40 transition-colors">
-                      <td className="px-6 py-4 font-semibold text-gray-500 dark:text-slate-400 font-mono w-12">{index + 1}</td>
-                      <td className="px-6 py-4 font-mono">
-                        {date.toLocaleDateString("en-US", {
-                          weekday: "short",
-                          month: "short",
-                          day: "numeric",
-                        })}
-                      </td>
-                      <td className="px-6 py-4">
-                        {isMismatchedRemote ? (
-                          <div className="flex flex-col gap-0.5">
-                            <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold border bg-rose-500/10 text-rose-455 dark:text-rose-400 border-rose-500/30 w-fit">
-                              {rec.workLocation} (Mismatch)
-                            </span>
-                            <span className="text-[9px] font-semibold text-rose-500 dark:text-rose-400 tracking-wide font-sans">
-                              Expected: Office
-                            </span>
-                          </div>
-                        ) : (
-                          <span
-                            className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border ${
-                              rec.workLocation === "OFFICE"
-                                ? "bg-brand-500/10 text-brand-600 dark:text-brand-300 border-brand-500/30"
-                                : "bg-cyan-500/10 text-cyan-600 dark:text-cyan-300 border-cyan-500/30"
-                            }`}
-                          >
-                            {rec.workLocation}
-                          </span>
-                        )}
-                      </td>
+                profile.attendanceHistory.map((rec: any, index: number) => (
+                  <tr key={rec.id} className="hover:bg-slate-800/40 transition-colors">
+                    <td className="px-6 py-4 font-semibold text-gray-500 dark:text-slate-400 font-mono w-12">
+                      {index + 1}
+                    </td>
+                    <td className="px-6 py-4 font-mono">
+                      {new Date(rec.workDate).toLocaleDateString("en-US", {
+                        weekday: "short",
+                        month: "short",
+                        day: "numeric",
+                      })}
+                    </td>
+                    <td className="px-6 py-4">
+                      <span
+                        className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border ${
+                          rec.workLocation === "OFFICE"
+                            ? "bg-brand-500/10 text-brand-600 dark:text-brand-300 border-brand-500/30"
+                            : "bg-cyan-500/10 text-cyan-600 dark:text-cyan-300 border-cyan-500/30"
+                        }`}
+                      >
+                        {rec.workLocation}
+                      </span>
+                    </td>
                     <td className="px-6 py-4 font-mono text-emerald-400">
-                      {new Date(rec.checkInTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                      {new Date(rec.checkInTime).toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })}
                     </td>
                     <td className="px-6 py-4 font-mono text-amber-400">
                       {rec.checkOutTime
-                        ? new Date(rec.checkOutTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+                        ? new Date(rec.checkOutTime).toLocaleTimeString([], {
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })
                         : "--:--"}
                     </td>
-                    <td className="px-6 py-4 font-mono">{rec.hoursWorked?.toFixed(1) || "0.0"} hrs</td>
+                    <td className="px-6 py-4 font-mono">
+                      {rec.hoursWorked?.toFixed(1) || "0.0"} hrs
+                    </td>
                     <td className="px-6 py-4">
                       <span className="px-2 py-1 rounded bg-gray-100 dark:bg-slate-800 text-gray-600 dark:text-slate-300 text-[10px] font-semibold">
                         {rec.status}
@@ -352,15 +309,16 @@ export default async function HREmployeeProfilePage({
                     <td className="px-6 py-4">
                       <span
                         className={`inline-flex items-center gap-1 text-[10px] font-semibold ${
-                          rec.verificationStatus === "VERIFIED" ? "text-emerald-400" : "text-amber-400"
+                          rec.verificationStatus === "VERIFIED"
+                            ? "text-emerald-400"
+                            : "text-amber-400"
                         }`}
                       >
                         <CheckCircle className="h-3 w-3" /> {rec.verificationStatus}
                       </span>
                     </td>
                   </tr>
-                  );
-                })
+                ))
               )}
             </tbody>
           </table>

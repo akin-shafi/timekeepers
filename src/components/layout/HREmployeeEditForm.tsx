@@ -8,6 +8,7 @@ import { updateHREmployeeAction } from "@/lib/actions/hr.actions";
 
 interface HREmployeeEditFormProps {
   userId: string;
+  canEditEmail?: boolean;
   initial: {
     name: string;
     email: string;
@@ -23,11 +24,12 @@ interface HREmployeeEditFormProps {
 const EMPLOYMENT_STATUSES = ["ACTIVE", "PROBATION", "CONTRACT", "TERMINATED"];
 const WORK_ARRANGEMENTS = ["HYBRID", "REMOTE", "OFFICE"];
 
-export function HREmployeeEditForm({ userId, initial }: HREmployeeEditFormProps) {
+export function HREmployeeEditForm({ userId, initial, canEditEmail = false }: HREmployeeEditFormProps) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
 
   const [name, setName] = useState(initial.name);
+  const [email, setEmail] = useState(initial.email);
   const [phone, setPhone] = useState(initial.phone === "N/A" ? "" : initial.phone);
   const [jobTitle, setJobTitle] = useState(initial.jobTitle);
   const [avatarUrl, setAvatarUrl] = useState(initial.avatarUrl || "");
@@ -53,6 +55,7 @@ export function HREmployeeEditForm({ userId, initial }: HREmployeeEditFormProps)
       const res = await updateHREmployeeAction({
         userId,
         name,
+        ...(canEditEmail ? { email } : {}),
         phone,
         jobTitle,
         avatarUrl,
@@ -136,6 +139,21 @@ export function HREmployeeEditForm({ userId, initial }: HREmployeeEditFormProps)
               <label className={labelClass}>Phone</label>
               <input type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} className={inputClass} />
             </div>
+            {canEditEmail && (
+              <div className="sm:col-span-2">
+                <label className={labelClass}>
+                  Email Address{" "}
+                  <span className="text-amber-400 normal-case font-normal">(Super Admin only)</span>
+                </label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  className={inputClass}
+                />
+              </div>
+            )}
             <div>
               <label className={labelClass}>Job Title</label>
               <input type="text" value={jobTitle} onChange={(e) => setJobTitle(e.target.value)} className={inputClass} />

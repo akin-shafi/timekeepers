@@ -246,6 +246,7 @@ export async function getHREmployeeProfileAction(userId: string) {
 export async function updateHREmployeeAction({
   userId,
   name,
+  email,
   avatarUrl,
   jobTitle,
   phone,
@@ -260,6 +261,7 @@ export async function updateHREmployeeAction({
 }: {
   userId: string;
   name?: string;
+  email?: string;
   avatarUrl?: string;
   jobTitle?: string;
   phone?: string;
@@ -322,9 +324,30 @@ export async function updateHREmployeeAction({
     return { success: false, error: "Display name cannot be empty." };
   }
 
+  // Email update — SUPER_ADMIN only
+  let trimmedEmail: string | undefined;
+  if (email !== undefined) {
+    if (hrUser.role !== Role.SUPER_ADMIN) {
+      return { success: false, error: "Forbidden: Only Super Admins can change a staff email address." };
+    }
+    trimmedEmail = email.trim().toLowerCase();
+    if (!trimmedEmail) {
+      return { success: false, error: "Email address cannot be empty." };
+    }
+    // Check uniqueness — make sure no other user already has this email
+    const conflict = await db.user.findFirst({
+      where: { email: trimmedEmail, NOT: { id: userId } },
+      select: { id: true },
+    });
+    if (conflict) {
+      return { success: false, error: `Email ${trimmedEmail} is already in use by another account.` };
+    }
+  }
+
   // Update user metadata
   const dataToUpdate: any = {
     ...(trimmedName !== undefined ? { name: trimmedName } : {}),
+    ...(trimmedEmail !== undefined ? { email: trimmedEmail } : {}),
     ...(avatarUrl !== undefined ? { avatarUrl: avatarUrl.trim() || null } : {}),
     ...(jobTitle !== undefined ? { jobTitle } : {}),
     ...(phone !== undefined ? { phone } : {}),
@@ -375,6 +398,7 @@ export async function updateHREmployeeAction({
       entityId: userId,
       newValue: {
         name: trimmedName,
+        email: trimmedEmail,
         avatarUrl,
         jobTitle,
         phone,
@@ -387,6 +411,8 @@ export async function updateHREmployeeAction({
 
   revalidatePath("/hr/employees");
   revalidatePath(`/hr/employees/${userId}`);
+  revalidatePath("/admin/employees");
+  revalidatePath(`/admin/employees/${userId}`);
   revalidatePath("/hr/work-arrangements");
 
   return { success: true };
