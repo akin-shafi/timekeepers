@@ -116,7 +116,7 @@ export default function SignInPage() {
         {/* Security Footer */}
         <div className="pt-4 text-center text-xs text-gray-400 dark:text-slate-500 flex items-center justify-center gap-2">
           <Lock className="h-3.5 w-3.5 text-gray-400 dark:text-slate-400" />
-          <span>Multi-Tenant Enterprise Encrypted Session</span>
+          <span>Encrypted Session</span>
         </div>
       </div>
     </div>
