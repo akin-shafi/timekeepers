@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useTransition, useState } from "react";
+import  { useTransition, useState } from "react";
 import Link from "next/link";
 import { ColumnDef } from "@tanstack/react-table";
-import { Shield, RefreshCw, Eye } from "lucide-react";
+import { RefreshCw, Eye } from "lucide-react";
 import { updateUserRoleAction } from "@/lib/actions/admin.actions";
 import { Avatar } from "@/components/layout/Avatar";
 import { DataTable } from "@/components/ui/DataTable";
