@@ -30,7 +30,7 @@ export default async function HREmployeeProfilePage({
 
   // Cumulative stipend total
   const totalStipend = profile.stipendCalculations.reduce(
-    (sum: number, s: { stipendAmount: number }) => sum + (s.stipendAmount || 0),
+    (sum: number, s: { calculatedStipend: number }) => sum + (s.calculatedStipend || 0),
     0
   );
 
@@ -247,7 +247,7 @@ export default async function HREmployeeProfilePage({
                     </td>
                     <td className="px-4 py-3">{s.officeDaysCount} days</td>
                     <td className="px-4 py-3 font-bold text-emerald-400">
-                      ₦{(s.stipendAmount || 0).toLocaleString()}
+                      ₦{(s.calculatedStipend || 0).toLocaleString()}
                     </td>
                   </tr>
                 ))}

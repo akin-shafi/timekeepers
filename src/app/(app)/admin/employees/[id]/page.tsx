@@ -26,7 +26,7 @@ export default async function AdminEmployeeProfilePage({
 
   // Cumulative stipend total
   const totalStipend = profile.stipendCalculations.reduce(
-    (sum: number, s: { stipendAmount: number }) => sum + (s.stipendAmount || 0),
+    (sum: number, s: { calculatedStipend: number }) => sum + (s.calculatedStipend || 0),
     0
   );
 
