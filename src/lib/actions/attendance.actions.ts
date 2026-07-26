@@ -14,6 +14,7 @@ export interface CheckInPayload {
   longitude?: number;
   ipAddress?: string;
   deviceInfo?: string;
+  overrideReason?: string;
 }
 
 export async function getActiveOfficeLocationsAction() {
@@ -62,6 +63,17 @@ export async function checkInAction(payload: CheckInPayload) {
 
   if (!org) {
     return { success: false, error: "Organization not found." };
+  }
+
+  // Determine if location override is required
+  const expectedLocation = await checkExpectedWorkMode(user.id, today, user.organizationId);
+  if (payload.workLocation !== expectedLocation && !payload.overrideReason) {
+    return {
+      success: false,
+      requiresOverride: true,
+      expectedLocation,
+      error: `You are scheduled to work from ${expectedLocation === WorkLocation.OFFICE ? "the office" : "remotely"} today.`,
+    };
   }
 
   // Determine user's primary department
@@ -128,6 +140,7 @@ export async function checkInAction(payload: CheckInPayload) {
       ipAddress: payload.ipAddress,
       deviceInfo: payload.deviceInfo,
       isLate,
+      notes: payload.overrideReason ? `Location Override Reason: ${payload.overrideReason}` : null,
     },
   });
 

@@ -30,7 +30,9 @@ export default function EmployeeDashboard() {
   const [isWorkingDay, setIsWorkingDay] = useState<boolean>(true);
   const [nonWorkingReason, setNonWorkingReason] = useState<string>("");
   const [showConfirmModal, setShowConfirmModal] = useState<boolean>(false);
-
+  const [showOverrideModal, setShowOverrideModal] = useState<boolean>(false);
+  const [overrideReason, setOverrideReason] = useState<string>("");
+  const [expectedLocation, setExpectedLocation] = useState<string>("");
   const checkWorkingDay = async () => {
     try {
       const res = await checkIfWorkingDayAction();
@@ -132,7 +134,7 @@ export default function EmployeeDashboard() {
     }
   }, []);
 
-  const handleCheckIn = async () => {
+  const handleCheckIn = async (reason?: string) => {
     setIsSubmitting(true);
     setErrorMsg("");
     try {
@@ -141,10 +143,16 @@ export default function EmployeeDashboard() {
         latitude: coords.lat,
         longitude: coords.lng,
         officeLocationId: workLocation === "OFFICE" ? selectedOfficeId : undefined,
+        overrideReason: reason,
       });
 
       if (res.success) {
+        setShowOverrideModal(false);
+        setOverrideReason("");
         await fetchTodayStatus();
+      } else if (res.requiresOverride) {
+        setExpectedLocation(res.expectedLocation);
+        setShowOverrideModal(true);
       } else {
         setErrorMsg(res.error || "Check-in failed.");
       }
@@ -445,6 +453,57 @@ export default function EmployeeDashboard() {
                 className="flex-1 py-2.5 rounded-xl text-xs font-bold text-white bg-amber-500 hover:bg-amber-600 active:scale-[0.99] transition-all shadow-md shadow-amber-500/20"
               >
                 Yes, Check In
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* Location Override Modal */}
+      {showOverrideModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-sm">
+          <div className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 p-6 rounded-3xl max-w-sm w-full shadow-2xl space-y-4">
+            <div className="flex items-center gap-3 text-amber-500 dark:text-amber-400">
+              <div className="h-10 w-10 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center">
+                <AlertCircle className="h-5 w-5" />
+              </div>
+              <h3 className="text-base font-bold text-gray-900 dark:text-white">
+                Location Override
+              </h3>
+            </div>
+            
+            <p className="text-xs text-gray-650 dark:text-slate-300 leading-relaxed font-sans">
+              You are scheduled to work <strong className="text-amber-600 dark:text-amber-400">{expectedLocation === "OFFICE" ? "from the office" : "remotely"}</strong> today, 
+              but you are trying to check in {workLocation === "OFFICE" ? "at the office" : "remotely"}. 
+              Please provide a reason for this change.
+            </p>
+
+            <div>
+              <textarea
+                value={overrideReason}
+                onChange={(e) => setOverrideReason(e.target.value)}
+                placeholder="Reason for location change..."
+                className="w-full text-sm rounded-xl border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-gray-900 dark:text-white focus:ring-2 focus:ring-amber-500/20 focus:border-amber-500 transition-all min-h-[80px]"
+              />
+            </div>
+
+            <div className="flex gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowOverrideModal(false);
+                  setOverrideReason("");
+                }}
+                className="flex-1 py-2.5 rounded-xl text-xs font-semibold text-gray-700 dark:text-slate-300 bg-gray-105 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-750 transition-all border border-transparent dark:border-slate-700/50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={() => handleCheckIn(overrideReason)}
+                disabled={!overrideReason.trim() || isSubmitting}
+                className="flex-1 py-2.5 rounded-xl text-xs font-bold text-white bg-amber-500 hover:bg-amber-600 disabled:opacity-50 active:scale-[0.99] transition-all shadow-md shadow-amber-500/20"
+              >
+                {isSubmitting ? "Submitting..." : "Confirm Check-in"}
               </button>
             </div>
           </div>
