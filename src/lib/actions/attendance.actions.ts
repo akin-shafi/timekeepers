@@ -696,10 +696,16 @@ export async function getDashboardStatsAction() {
   const year = now.getFullYear();
   const month = now.getMonth();
   
+  let officeDays = user.officeDays || [];
+  // Fallback if specific days are not configured but we know it's 2 per week (for demo purposes based on user request)
+  if (officeDays.length === 0 && user.requiredOfficeDaysPerWeek === 2) {
+    officeDays = ["WEDNESDAY", "FRIDAY"];
+  }
+
   let requiredDays = user.requiredOfficeDaysPerMonth;
   let isDynamic = false;
 
-  if (user.officeDays && user.officeDays.length > 0) {
+  if (officeDays && officeDays.length > 0) {
     const daysInMonth = new Date(year, month + 1, 0).getDate();
     let exactRequiredDays = 0;
     
@@ -708,7 +714,7 @@ export async function getDashboardStatsAction() {
       "THURSDAY": 4, "FRIDAY": 5, "SATURDAY": 6
     };
     
-    const targetDays = user.officeDays.map(d => dayMap[d.toUpperCase()]).filter(d => d !== undefined);
+    const targetDays = officeDays.map(d => dayMap[d.toUpperCase()]).filter(d => d !== undefined);
     
     for (let day = 1; day <= daysInMonth; day++) {
       const date = new Date(year, month, day);
@@ -725,7 +731,7 @@ export async function getDashboardStatsAction() {
     success: true, 
     requiredDays, 
     requiredPerWeek: user.requiredOfficeDaysPerWeek,
-    officeDays: user.officeDays,
+    officeDays: officeDays,
     isDynamic 
   };
 }
