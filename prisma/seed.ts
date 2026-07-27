@@ -29,10 +29,10 @@ async function main() {
     data: {
       organizationId: org.id,
       name: "Getrova HQ — Victoria Island",
-      address: "142 Ahmadu Bello Way, Victoria Island, Lagos, Nigeria",
-      latitude: 6.4281,
-      longitude: 3.4219,
-      radiusMeters: 150.0,
+      address: "11b Adeola Odeku St, Victoria Island, Lagos 106104, Lagos, Nigeria",
+      latitude: 6.430642499999999,
+      longitude: 3.4120922,
+      radiusMeters: 100.0,
       allowedIPs: ["192.168.1.1/24", "102.89.23.45"],
       allowedSSIDs: ["Getrova_Corporate_5G", "Getrova_Guest"],
     },
@@ -72,8 +72,8 @@ async function main() {
     where: { email: "alex.admin@getrova.com" },
     update: {},
     create: {
-      email: "alex.admin@getrova.com",
-      name: "Alex Admin",
+      email: "henry@getrova.com",
+      name: "Henry David",
       employeeId: "EMP-ADM-001",
       jobTitle: "Chief Technology Officer",
       phone: "+234 801 234 5678",
@@ -95,11 +95,11 @@ async function main() {
   });
 
   const hrUser = await prisma.user.upsert({
-    where: { email: "grace.hr@getrova.com" },
+    where: { email: "victor.owu@getrova.com" },
     update: {},
     create: {
-      email: "grace.hr@getrova.com",
-      name: "Grace HR",
+      email: "victor.owu@getrova.com",
+      name: "Victor Owu",
       employeeId: "EMP-HR-001",
       jobTitle: "Head of People Operations",
       phone: "+234 802 345 6789",
@@ -121,11 +121,11 @@ async function main() {
   });
 
   const deptHeadUser = await prisma.user.upsert({
-    where: { email: "sarah.head@getrova.com" },
+    where: { email: "ahmed@getrova.com" },
     update: {},
     create: {
-      email: "sarah.head@getrova.com",
-      name: "Sarah Jenkins",
+      email: "ahmed@getrova.com",
+      name: "Ahmed Oladele",
       employeeId: "EMP-ENG-001",
       jobTitle: "Engineering Manager",
       phone: "+234 803 456 7890",
@@ -147,11 +147,11 @@ async function main() {
   });
 
   const devUser = await prisma.user.upsert({
-    where: { email: "john.dev@getrova.com" },
+    where: { email: "shafi@getrova.com" },
     update: {},
     create: {
-      email: "john.dev@getrova.com",
-      name: "John Doe",
+      email: "shafi@getrova.com",
+      name: "Shafi Akinropo",
       employeeId: "EMP-ENG-002",
       jobTitle: "Senior Frontend Engineer",
       phone: "+234 804 567 8901",
@@ -173,11 +173,11 @@ async function main() {
   });
 
   const remoteUser = await prisma.user.upsert({
-    where: { email: "mary.remote@getrova.com" },
+    where: { email: "chibueze@getrova.com" },
     update: {},
     create: {
-      email: "mary.remote@getrova.com",
-      name: "Mary Smith",
+      email: "chibueze@getrova.com",
+      name: "Chibueze Paul",
       employeeId: "EMP-ENG-003",
       jobTitle: "Backend Software Engineer",
       phone: "+234 805 678 9012",
@@ -199,13 +199,13 @@ async function main() {
   });
 
   const hybridUser = await prisma.user.upsert({
-    where: { email: "david.hybrid@getrova.com" },
+    where: { email: "oluremilekun@getrova.com" },
     update: {},
     create: {
-      email: "david.hybrid@getrova.com",
-      name: "David Miller",
+      email: "oluremilekun@getrova.com",
+      name: "Emmanuel Oluremilekun",
       employeeId: "EMP-PRD-001",
-      jobTitle: "Lead Product Designer",
+      jobTitle: "Scrum Master",
       phone: "+234 806 789 0123",
       workArrangement: "HYBRID",
       avatarUrl: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80",
@@ -217,7 +217,7 @@ async function main() {
       },
       deptMemberships: {
         create: {
-          departmentId: product.id,
+          departmentId: engineering.id,
           isHead: false,
         },
       },
