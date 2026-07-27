@@ -34,6 +34,8 @@ export default function EmployeeDashboard() {
   const [overrideReason, setOverrideReason] = useState<string>("");
   const [expectedLocation, setExpectedLocation] = useState<string>("");
   const [gpsError, setGpsError] = useState<string>("");
+  const [showCheckoutModal, setShowCheckoutModal] = useState<boolean>(false);
+  const [checkoutMilestone, setCheckoutMilestone] = useState<string>("");
 
   const [requiredDays, setRequiredDays] = useState<number>(8);
   const [requiredPerWeek, setRequiredPerWeek] = useState<number>(2);
@@ -196,8 +198,10 @@ export default function EmployeeDashboard() {
       const res = await checkOutAction({
         latitude: coords.lat,
         longitude: coords.lng,
+        dailyMilestone: checkoutMilestone,
       });
       if (res.success) {
+        setShowCheckoutModal(false);
         await fetchTodayStatus();
       } else {
         setErrorMsg(res.error || "Check-out failed.");
@@ -400,7 +404,7 @@ export default function EmployeeDashboard() {
               </div>
 
               <button
-                onClick={handleCheckOut}
+                onClick={() => setShowCheckoutModal(true)}
                 disabled={isSubmitting || coords.lat === undefined}
                 className="w-full py-4 rounded-2xl font-bold text-base text-white bg-red-600 hover:bg-red-500 active:scale-[0.99] transition-all shadow-xl shadow-red-600/30 disabled:opacity-50"
               >
@@ -537,6 +541,56 @@ export default function EmployeeDashboard() {
                 className="flex-1 py-2.5 rounded-xl text-xs font-bold text-white bg-amber-500 hover:bg-amber-600 disabled:opacity-50 active:scale-[0.99] transition-all shadow-md shadow-amber-500/20"
               >
                 {isSubmitting ? "Submitting..." : "Confirm Check-in"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Checkout with Milestone Modal */}
+      {showCheckoutModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-sm">
+          <div className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 p-6 rounded-3xl max-w-sm w-full shadow-2xl space-y-4">
+            <div className="flex items-center gap-3 text-red-500 dark:text-red-400">
+              <div className="h-10 w-10 rounded-xl bg-red-500/10 border border-red-500/30 flex items-center justify-center">
+                <CheckCircle2 className="h-5 w-5" />
+              </div>
+              <h3 className="text-base font-bold text-gray-900 dark:text-white">
+                Check Out For Today
+              </h3>
+            </div>
+            
+            <p className="text-xs text-gray-650 dark:text-slate-300 leading-relaxed font-sans">
+              Great work today! Briefly describe what you accomplished. This will be saved in your <strong>Daily Milestones</strong>.
+            </p>
+
+            <div>
+              <textarea
+                value={checkoutMilestone}
+                onChange={(e) => setCheckoutMilestone(e.target.value)}
+                placeholder="I completed the frontend implementation of..."
+                className="w-full text-sm rounded-xl border border-gray-300 dark:border-slate-700 bg-white dark:bg-slate-800 px-3 py-2 text-gray-900 dark:text-white focus:ring-2 focus:ring-red-500/20 focus:border-red-500 transition-all min-h-[80px]"
+              />
+            </div>
+
+            <div className="flex gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setShowCheckoutModal(false);
+                  setCheckoutMilestone("");
+                }}
+                className="flex-1 py-2.5 rounded-xl text-xs font-semibold text-gray-700 dark:text-slate-300 bg-gray-105 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-750 transition-all border border-transparent dark:border-slate-700/50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleCheckOut}
+                disabled={!checkoutMilestone.trim() || isSubmitting}
+                className="flex-1 py-2.5 rounded-xl text-xs font-bold text-white bg-red-600 hover:bg-red-500 disabled:opacity-50 active:scale-[0.99] transition-all shadow-md shadow-red-500/20"
+              >
+                {isSubmitting ? "Submitting..." : "Check Out"}
               </button>
             </div>
           </div>

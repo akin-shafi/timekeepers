@@ -24,6 +24,7 @@ import {
   Bell,
   UserCircle,
   Network,
+  NotebookText,
 } from "lucide-react";
 
 export function Sidebar() {
@@ -35,6 +36,7 @@ export function Sidebar() {
     { label: "My Dashboard", href: "/employee/dashboard", icon: LayoutDashboard },
     { label: "Attendance Records", href: "/employee/attendance", icon: Clock },
     { label: "Attendance Calendar", href: "/employee/calendar", icon: CalendarDays },
+    { label: "My Milestones", href: "/employee/milestones", icon: NotebookText },
     { label: "Correction Requests", href: "/employee/corrections", icon: FileCheck },
     { label: "My Profile", href: "/employee/profile", icon: UserCircle },
     { label: "Notifications", href: "/notifications", icon: Bell },

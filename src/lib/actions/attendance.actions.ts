@@ -215,7 +215,7 @@ export async function checkInAction(payload: CheckInPayload) {
   return { success: true, record };
 }
 
-export async function checkOutAction(payload?: { latitude?: number; longitude?: number }) {
+export async function checkOutAction(payload?: { latitude?: number; longitude?: number; dailyMilestone?: string }) {
   const user = await requireAuth();
 
   const now = new Date();
@@ -283,6 +283,7 @@ export async function checkOutAction(payload?: { latitude?: number; longitude?: 
       checkOutLatitude: payload?.latitude,
       checkOutLongitude: payload?.longitude,
       checkOutLocation: resolvedAddress,
+      dailyMilestone: payload?.dailyMilestone,
     },
   });
 
@@ -735,3 +736,28 @@ export async function getDashboardStatsAction() {
     isDynamic 
   };
 }
+
+export async function getMyMilestonesAction() {
+  const userSession = await requireAuth();
+  
+  try {
+    const records = await db.attendanceRecord.findMany({
+      where: { 
+        userId: userSession.id,
+        dailyMilestone: { not: null }
+      },
+      orderBy: { workDate: 'desc' },
+      select: {
+        id: true,
+        workDate: true,
+        hoursWorked: true,
+        dailyMilestone: true,
+      }
+    });
+    
+    return { success: true, records };
+  } catch (err: any) {
+    return { success: false, error: err.message || "Failed to fetch milestones." };
+  }
+}
+

@@ -253,6 +253,9 @@ model AttendanceRecord {
   approvedAt            DateTime?
   expectedWorkMode      String?
 
+  // Daily Work Log / KPI
+  dailyMilestone        String?            @db.Text
+
   createdAt          DateTime           @default(now())
   updatedAt          DateTime           @updatedAt
 
