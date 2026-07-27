@@ -404,7 +404,14 @@ export default function EmployeeDashboard() {
               </div>
 
               <button
-                onClick={() => setShowCheckoutModal(true)}
+                onClick={() => {
+                  const today = new Date();
+                  if (today.getDay() === 5) { // 5 is Friday
+                    setShowCheckoutModal(true);
+                  } else {
+                    handleCheckOut();
+                  }
+                }}
                 disabled={isSubmitting || coords.lat === undefined}
                 className="w-full py-4 rounded-2xl font-bold text-base text-white bg-red-600 hover:bg-red-500 active:scale-[0.99] transition-all shadow-xl shadow-red-600/30 disabled:opacity-50"
               >
@@ -556,12 +563,12 @@ export default function EmployeeDashboard() {
                 <CheckCircle2 className="h-5 w-5" />
               </div>
               <h3 className="text-base font-bold text-gray-900 dark:text-white">
-                Check Out For Today
+                Weekly Report
               </h3>
             </div>
             
             <p className="text-xs text-gray-650 dark:text-slate-300 leading-relaxed font-sans">
-              Great work today! Briefly describe what you accomplished. This will be saved in your <strong>Daily Milestones</strong>.
+              Great work this week! Briefly describe what you accomplished. This will be saved in your <strong>Weekly Milestones</strong>.
             </p>
 
             <div>

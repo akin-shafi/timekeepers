@@ -33,7 +33,7 @@ export default function MyMilestonesPage() {
           </span>
           <h1 className="text-2xl sm:text-3xl font-extrabold text-gray-900 dark:text-white">My Milestones</h1>
           <p className="text-sm text-gray-500 dark:text-slate-400 mt-1">
-            A record of your daily achievements and completed tasks.
+            A record of your weekly achievements and completed tasks.
           </p>
         </div>
       </div>

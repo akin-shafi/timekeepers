@@ -322,7 +322,7 @@ export function getCheckOutReminderEmailHtml(employeeName: string, orgName: stri
     <!-- Info Callout -->
     <div style="background: #0f172a; border-radius: 12px; border: 1px solid #334155; padding: 18px; margin: 24px 0; text-align: left;">
       <p style="font-size: 13px; line-height: 20px; color: #cbd5e1; margin: 0;">
-        ⚡ Make sure to finalize your working hours to ensure they are tracked accurately for payroll reporting.
+        ⚡ Make sure to finalize your working hours. Also, remember to keep a record of your milestones and submit your end-of-the-week report by Friday!
       </p>
     </div>
 
