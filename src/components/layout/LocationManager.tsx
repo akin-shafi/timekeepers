@@ -20,6 +20,7 @@ import {
   Globe,
   Settings,
   AlertTriangle,
+  RefreshCw,
 } from "lucide-react";
 
 interface OfficeLocationData {
@@ -75,6 +76,7 @@ export function LocationManager({
   const [formIPs, setFormIPs] = useState("");
   const [formSSIDs, setFormSSIDs] = useState("");
   const [formIsActive, setFormIsActive] = useState(true);
+  const [isDetectingIP, setIsDetectingIP] = useState(false);
 
   const openCreateModal = () => {
     setFormOrgId(selectedOrgId);
@@ -134,6 +136,28 @@ export function LocationManager({
     setFormAddress(address);
     setFormLat(lat.toString());
     setFormLng(lng.toString());
+  };
+
+  const handleDetectIP = async () => {
+    try {
+      setIsDetectingIP(true);
+      setError("");
+      const response = await fetch("https://api.ipify.org?format=json");
+      if (!response.ok) throw new Error("Failed to fetch IP");
+      const data = await response.json();
+      
+      setFormIPs((prev) => {
+        if (!prev) return data.ip;
+        const ips = prev.split(",").map(i => i.trim());
+        if (ips.includes(data.ip)) return prev;
+        return `${prev}, ${data.ip}`;
+      });
+    } catch (err) {
+      console.error(err);
+      setError("Failed to auto-detect IP address. Please enter it manually.");
+    } finally {
+      setIsDetectingIP(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -615,7 +639,17 @@ export function LocationManager({
                     placeholder="e.g. 197.210.64.12, 102.89.3.0"
                     className="w-full px-3 py-2.5 bg-gray-50 dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-lg text-sm text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-purple-500 focus:border-transparent outline-none transition-all"
                   />
-                  <p className="text-[10px] text-gray-400 dark:text-slate-500 mt-1">Comma-separated IP addresses or range prefixes.</p>
+                  <p className="text-[10px] text-gray-400 dark:text-slate-500 mt-1 mb-2">Comma-separated IP addresses or range prefixes.</p>
+                  
+                  <button
+                    type="button"
+                    onClick={handleDetectIP}
+                    disabled={isDetectingIP}
+                    className="flex items-center gap-1.5 text-xs font-medium text-purple-600 dark:text-purple-400 hover:text-purple-700 dark:hover:text-purple-300 disabled:opacity-50 transition-colors"
+                  >
+                    <RefreshCw className={`w-3.5 h-3.5 ${isDetectingIP ? "animate-spin" : ""}`} />
+                    {isDetectingIP ? "Detecting..." : "Auto-Detect Current Network IP"}
+                  </button>
                 </div>
 
                 <div>
