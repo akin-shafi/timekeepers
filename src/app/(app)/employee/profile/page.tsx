@@ -192,7 +192,7 @@ export default function ProfilePage() {
             </label>
             <select
               value={employmentStatus}
-              onChange={(e) => setEmploymentStatus(e.target.value)}
+              onChange={(e) => setEmploymentStatus(e.target.value as EmploymentStatus)}
               className="w-full bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-xl px-3.5 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500"
             >
               {["ACTIVE", "PROBATION", "CONTRACT", "TERMINATED"].map((s) => (
