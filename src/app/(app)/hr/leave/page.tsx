@@ -1,5 +1,6 @@
 import React from "react";
 import { getCurrentUser } from "@/lib/auth/guard";
+import { LeaveStatus } from "@prisma/client";
 import {
   getHRLeaveRequestsAction,
   createLeaveRequestAction,
@@ -157,7 +158,7 @@ export default async function HRLeaveManagementPage({
                         <form
                           action={async (formData: FormData) => {
                             "use server";
-                            const status = formData.get("status") as string;
+                            const status = formData.get("status") as LeaveStatus;
                             await reviewLeaveRequestAction({ leaveId: l.id, status });
                           }}
                           className="flex items-center justify-end gap-2"

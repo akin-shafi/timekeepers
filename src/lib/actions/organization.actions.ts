@@ -40,6 +40,7 @@ export async function createOrganizationAction(data: {
   workEndTime?: string;
   gracePeriodMins?: number;
   verificationType?: VerificationMethod;
+  aiMilestoneSummaryEnabled?: boolean;
 }) {
   try {
     const admin = await requireSuperAdmin();
@@ -54,6 +55,7 @@ export async function createOrganizationAction(data: {
         workEndTime: data.workEndTime || "17:00",
         gracePeriodMins: data.gracePeriodMins ?? 15,
         verificationType: data.verificationType || VerificationMethod.SELF_DECLARATION,
+        aiMilestoneSummaryEnabled: data.aiMilestoneSummaryEnabled ?? false,
       },
     });
 
@@ -91,6 +93,7 @@ export async function updateOrganizationAction(
     workEndTime?: string;
     gracePeriodMins?: number;
     verificationType?: VerificationMethod;
+    aiMilestoneSummaryEnabled?: boolean;
   }
 ) {
   try {
@@ -111,6 +114,7 @@ export async function updateOrganizationAction(
         ...(data.workEndTime !== undefined && { workEndTime: data.workEndTime }),
         ...(data.gracePeriodMins !== undefined && { gracePeriodMins: data.gracePeriodMins }),
         ...(data.verificationType !== undefined && { verificationType: data.verificationType }),
+        ...(data.aiMilestoneSummaryEnabled !== undefined && { aiMilestoneSummaryEnabled: data.aiMilestoneSummaryEnabled }),
       },
     });
 

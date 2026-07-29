@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import { EmploymentStatus } from "@prisma/client";
 import { useSession } from "next-auth/react";
 import { UserCircle, Save, CheckCircle2, AlertCircle, Lock, Sparkles } from "lucide-react";
 import { Avatar } from "@/components/layout/Avatar";
@@ -15,7 +16,7 @@ export default function ProfilePage() {
   const [phone, setPhone] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
   const [jobTitle, setJobTitle] = useState("");
-  const [employmentStatus, setEmploymentStatus] = useState("");
+  const [employmentStatus, setEmploymentStatus] = useState<EmploymentStatus>("ACTIVE");
   const [requiredOfficeDaysPerWeek, setRequiredOfficeDaysPerWeek] = useState(2);
   const [officeDays, setOfficeDays] = useState<string[]>([]);
   const [profile, setProfile] = useState<ProfileData | null>(null);
@@ -35,7 +36,7 @@ export default function ProfilePage() {
           setPhone(res.data.phone);
           setAvatarUrl(res.data.avatarUrl);
           setJobTitle(res.data.jobTitle);
-          setEmploymentStatus(res.data.employmentStatus);
+          setEmploymentStatus(res.data.employmentStatus as EmploymentStatus);
           setRequiredOfficeDaysPerWeek(res.data.requiredOfficeDaysPerWeek || 2);
           setOfficeDays(res.data.officeDays || []);
         } else {

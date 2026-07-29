@@ -10,6 +10,11 @@ export default async function AdminEmployeesPage() {
   if (!admin) return null;
 
   const users = await db.user.findMany({
+    where: {
+      orgMemberships: {
+        some: { organizationId: admin.organizationId },
+      },
+    },
     include: {
       orgMemberships: {
         include: { organization: true },

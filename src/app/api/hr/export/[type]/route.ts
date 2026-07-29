@@ -20,8 +20,17 @@ export async function GET(
   }
 
   const { type } = await params;
-  if (user.role === "DEPARTMENT_HEAD" && type !== "attendance") {
+  
+  // Strict role allowlists per branch
+  const isDeptHead = user.role === "DEPARTMENT_HEAD";
+  const isHrOrAdmin = user.role === "HR" || user.role === "SUPER_ADMIN";
+
+  if (isDeptHead && type !== "attendance") {
     return NextResponse.json({ error: "Unauthorized access to this resource" }, { status: 403 });
+  }
+
+  if (!isDeptHead && !isHrOrAdmin) {
+    return NextResponse.json({ error: "Unauthorized access" }, { status: 403 });
   }
 
   let csvContent = "";

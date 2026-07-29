@@ -42,6 +42,7 @@ interface OrgWithCounts {
     departments: number;
     officeLocations: number;
   };
+  aiMilestoneSummaryEnabled: boolean;
 }
 
 interface OrganizationManagerProps {
@@ -66,6 +67,7 @@ export function OrganizationManager({ organizations }: OrganizationManagerProps)
   const [formWorkEnd, setFormWorkEnd] = useState("17:00");
   const [formGrace, setFormGrace] = useState(15);
   const [formVerificationType, setFormVerificationType] = useState<VerificationMethod>("SELF_DECLARATION");
+  const [formAiEnabled, setFormAiEnabled] = useState(false);
 
   const openCreateModal = () => {
     setFormName("");
@@ -76,6 +78,7 @@ export function OrganizationManager({ organizations }: OrganizationManagerProps)
     setFormWorkEnd("17:00");
     setFormGrace(15);
     setFormVerificationType("SELF_DECLARATION");
+    setFormAiEnabled(false);
     setEditingOrg(null);
     setError("");
     setSuccess("");
@@ -91,6 +94,7 @@ export function OrganizationManager({ organizations }: OrganizationManagerProps)
     setFormWorkEnd(org.workEndTime);
     setFormGrace(org.gracePeriodMins);
     setFormVerificationType(org.verificationType as VerificationMethod);
+    setFormAiEnabled(org.aiMilestoneSummaryEnabled);
     setEditingOrg(org);
     setError("");
     setSuccess("");
@@ -125,6 +129,7 @@ export function OrganizationManager({ organizations }: OrganizationManagerProps)
           workEndTime: formWorkEnd,
           gracePeriodMins: formGrace,
           verificationType: formVerificationType,
+          aiMilestoneSummaryEnabled: formAiEnabled,
         });
         if (!res.success) {
           setError(res.error || "Failed to create organization.");
@@ -141,6 +146,7 @@ export function OrganizationManager({ organizations }: OrganizationManagerProps)
           workEndTime: formWorkEnd,
           gracePeriodMins: formGrace,
           verificationType: formVerificationType,
+          aiMilestoneSummaryEnabled: formAiEnabled,
         });
         if (!res.success) {
           setError(res.error || "Failed to update organization.");
@@ -452,6 +458,27 @@ export function OrganizationManager({ organizations }: OrganizationManagerProps)
                 <p className="text-[10px] text-gray-400 dark:text-slate-500 mt-1">
                   Enforces how check-in locations and networks are validated.
                 </p>
+              </div>
+
+              {/* AI Features Toggle (Edit Only or Admin) */}
+              <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-slate-800 rounded-lg border border-gray-200 dark:border-slate-700">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-1">
+                    AI Milestone Summaries
+                  </label>
+                  <p className="text-xs text-gray-500 dark:text-slate-400">
+                    Allow HR to issue OTP tokens for employees to generate KPI reports using Gemini AI.
+                  </p>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    className="sr-only peer"
+                    checked={formAiEnabled}
+                    onChange={(e) => setFormAiEnabled(e.target.checked)}
+                  />
+                  <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 dark:peer-focus:ring-purple-800 rounded-full peer dark:bg-slate-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all dark:border-gray-600 peer-checked:bg-purple-600"></div>
+                </label>
               </div>
 
               {/* Action buttons */}

@@ -2,7 +2,7 @@
 
 import { db } from "@/lib/db";
 import { requireAuth } from "@/lib/auth/guard";
-import { Role } from "@prisma/client";
+import { Role, EmploymentStatus, WorkArrangement } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 
 export async function getMyProfileAction() {
@@ -34,8 +34,8 @@ export async function getMyProfileAction() {
         jobTitle: user.jobTitle || "Staff",
         role: user.orgMemberships[0]?.role || Role.EMPLOYEE,
         department: user.deptMemberships[0]?.department?.name || "Unassigned",
-        employmentStatus: user.employmentStatus || "ACTIVE",
-        workArrangement: user.workArrangement || "HYBRID",
+        employmentStatus: (user.employmentStatus as EmploymentStatus) || EmploymentStatus.ACTIVE,
+        workArrangement: (user.workArrangement as WorkArrangement) || WorkArrangement.HYBRID,
         requiredOfficeDaysPerWeek: user.requiredOfficeDaysPerWeek ?? 2,
         requiredOfficeDaysPerMonth: user.requiredOfficeDaysPerMonth ?? 8,
         officeDays: user.officeDays || [],
@@ -56,14 +56,16 @@ export async function updateMyProfileAction({
   employmentStatus,
   requiredOfficeDaysPerWeek,
   officeDays,
+  workArrangement,
 }: {
   name?: string;
   phone?: string;
   avatarUrl?: string;
   jobTitle?: string;
-  employmentStatus?: string;
+  employmentStatus?: EmploymentStatus;
   requiredOfficeDaysPerWeek?: number;
   officeDays?: string[];
+  workArrangement?: WorkArrangement;
 }) {
   const authUser = await requireAuth();
 
@@ -87,7 +89,7 @@ export async function updateMyProfileAction({
       phone?: string | null;
       avatarUrl?: string | null;
       jobTitle?: string | null;
-      employmentStatus?: string;
+      employmentStatus?: EmploymentStatus;
       requiredOfficeDaysPerWeek?: number;
       officeDays?: string[];
     } = {
@@ -95,7 +97,7 @@ export async function updateMyProfileAction({
       ...(phone !== undefined ? { phone: phone.trim() || null } : {}),
       ...(avatarUrl !== undefined ? { avatarUrl: avatarUrl.trim() || null } : {}),
       ...(jobTitle !== undefined ? { jobTitle: jobTitle.trim() || null } : {}),
-      ...(employmentStatus !== undefined ? { employmentStatus } : {}),
+      ...(employmentStatus !== undefined ? { employmentStatus: employmentStatus as EmploymentStatus } : {}),
       ...(requiredOfficeDaysPerWeek !== undefined ? { requiredOfficeDaysPerWeek } : {}),
       ...(officeDays !== undefined ? { officeDays } : {}),
     };

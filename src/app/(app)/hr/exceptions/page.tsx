@@ -1,5 +1,6 @@
 import React from "react";
 import { getCurrentUser } from "@/lib/auth/guard";
+import { ExceptionStatus } from "@prisma/client";
 import { getHRAttendanceExceptionsAction, resolveAttendanceExceptionAction } from "@/lib/actions/hr.actions";
 import { AlertTriangle, CheckCircle2, XCircle, Clock, Filter, MessageSquare, Download } from "lucide-react";
 
@@ -83,7 +84,7 @@ export default async function HRAttendanceExceptionsPage({
                             : "bg-rose-500/20 text-rose-300"
                         }`}
                       >
-                        {ex.status}
+                        {ex.status as ExceptionStatus}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-right">
@@ -91,7 +92,7 @@ export default async function HRAttendanceExceptionsPage({
                         <form
                           action={async (formData: FormData) => {
                             "use server";
-                            const status = formData.get("status") as string;
+                            const status = formData.get("status") as ExceptionStatus;
                             const hrComments = formData.get("hrComments") as string;
                             await resolveAttendanceExceptionAction({ exceptionId: ex.id, status, hrComments });
                           }}

@@ -72,7 +72,7 @@ async function main() {
     where: { email: "alex.admin@getrova.com" },
     update: {},
     create: {
-      email: "henry@getrova.com",
+      email: "alex.admin@getrova.com",
       name: "Henry David",
       employeeId: "EMP-ADM-001",
       jobTitle: "Chief Technology Officer",

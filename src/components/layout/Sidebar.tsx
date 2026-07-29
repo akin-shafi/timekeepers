@@ -25,6 +25,7 @@ import {
   UserCircle,
   Network,
   NotebookText,
+  Key,
 } from "lucide-react";
 
 export function Sidebar() {
@@ -54,6 +55,7 @@ export function Sidebar() {
     { label: "Work Arrangements", href: "/hr/work-arrangements", icon: Briefcase },
     { label: "Compliance", href: "/hr/compliance", icon: ShieldCheck },
     { label: "Transport Stipend", href: "/hr/transport", icon: Banknote },
+    { label: "AI Tokens", href: "/hr/ai-tokens", icon: Key },
     { label: "HR Reports", href: "/hr/reports", icon: FileSpreadsheet },
     { label: "HR Analytics", href: "/hr/analytics", icon: BarChart3 },
     { label: "Notifications", href: "/notifications", icon: Bell },

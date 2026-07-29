@@ -64,6 +64,55 @@ enum PolicyScope {
   USER
 }
 
+enum InvitationStatus {
+  PENDING
+  ACCEPTED
+  EXPIRED
+  REVOKED
+}
+
+enum EmploymentStatus {
+  ACTIVE
+  PROBATION
+  CONTRACT
+  TERMINATED
+}
+
+enum WorkArrangement {
+  HYBRID
+  REMOTE
+  OFFICE
+}
+
+enum ExceptionStatus {
+  OPEN
+  UNDER_REVIEW
+  RESOLVED
+  DISMISSED
+}
+
+enum LeaveStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CANCELLED
+}
+
+enum StipendStatus {
+  DRAFT
+  FINALIZED
+  PAID
+}
+
+enum NotificationType {
+  CHECKIN
+  CORRECTION
+  INVITATION
+  LATE
+  LEAVE
+  EXCEPTION
+}
+
 model Organization {
   id                                String                     @id @default(uuid())
   name                              String
@@ -75,6 +124,7 @@ model Organization {
   gracePeriodMins                   Int                        @default(15)
   verificationType                  VerificationMethod         @default(SELF_DECLARATION)
   hrApprovalRequiredForCorrection  Boolean                    @default(false)
+  aiMilestoneSummaryEnabled         Boolean                    @default(false)
   createdAt                         DateTime                   @default(now())
   updatedAt                         DateTime                   @updatedAt
 
@@ -91,6 +141,7 @@ model Organization {
   invitations       Invitation[]
   notifications     Notification[]
   auditLogs         AuditLog[]
+  aiSummaryTokens   AiSummaryToken[]
 
   @@map("organizations")
 }
@@ -124,8 +175,8 @@ model User {
   jobTitle                    String?
   phone                       String?
   dateJoined                  DateTime?
-  employmentStatus            String                  @default("ACTIVE") // ACTIVE, PROBATION, CONTRACT, TERMINATED
-  workArrangement             String                  @default("HYBRID") // HYBRID, REMOTE, OFFICE
+  employmentStatus            EmploymentStatus        @default(ACTIVE)
+  workArrangement             WorkArrangement         @default(HYBRID)
   requiredOfficeDaysPerWeek   Int                     @default(2)
   requiredOfficeDaysPerMonth  Int                     @default(8)
   officeDays                  String[]                // e.g. ["TUESDAY", "THURSDAY"]
@@ -151,6 +202,9 @@ model User {
   auditLogs            AuditLog[]
   groupsManaged        Group[]                 @relation("GroupManager")
   groupMemberships     GroupMembership[]
+  aiSummaryTokens      AiSummaryToken[]        @relation("TokenUser")
+  createdTokens        AiSummaryToken[]        @relation("TokenCreator")
+  aiTokenUsages        AiSummaryTokenUsage[]
 
   @@map("users")
 }
@@ -191,7 +245,7 @@ model Invitation {
   email          String
   role           Role         @default(EMPLOYEE)
   token          String       @unique @default(uuid())
-  status         String       @default("PENDING") // PENDING, ACCEPTED, EXPIRED, REVOKED
+  status         InvitationStatus @default(PENDING)
   invitedById    String
   expiresAt      DateTime
   createdAt      DateTime     @default(now())
@@ -303,7 +357,7 @@ model AttendanceException {
   workDate       DateTime     @db.Date
   exceptionType  String       // NO_CHECK_IN, NO_CHECK_OUT, LATE_CHECK_IN, EARLY_DEPARTURE, UNVERIFIED_OFFICE, BELOW_REQUIREMENT, DUPLICATE_RECORD, UNUSUAL_PATTERN
   description    String
-  status         String       @default("OPEN") // OPEN, UNDER_REVIEW, RESOLVED, DISMISSED
+  status         ExceptionStatus @default(OPEN)
   hrComments     String?
   resolvedById   String?
   createdAt      DateTime     @default(now())
@@ -362,7 +416,7 @@ model LeaveRecord {
   leaveType      String       // Annual, Sick, Casual, Maternity, Paternity, Unpaid
   reason         String?
   supportingDoc  String?
-  status         String       @default("PENDING") // PENDING, APPROVED, REJECTED, CANCELLED
+  status         LeaveStatus  @default(PENDING)
   reviewerId     String?
   reviewerNotes  String?
   createdAt      DateTime     @default(now())
@@ -410,7 +464,7 @@ model TransportStipendCalculation {
   absentDays            Int
   leaveDays             Int
   calculatedStipend     Float
-  status                String       @default("DRAFT") // DRAFT, FINALIZED, PAID
+  status                StipendStatus @default(DRAFT)
   createdAt             DateTime     @default(now())
   updatedAt             DateTime     @updatedAt
 
@@ -427,7 +481,7 @@ model Notification {
   userId         String
   title          String
   message        String
-  type           String       // CHECKIN, CORRECTION, INVITATION, LATE, LEAVE, EXCEPTION
+  type           NotificationType
   isRead         Boolean      @default(false)
   createdAt      DateTime     @default(now())
 
@@ -482,4 +536,49 @@ model GroupMembership {
 
   @@unique([groupId, userId])
   @@map("group_memberships")
+}
+
+enum TokenStatus {
+  ACTIVE
+  CANCELLED
+  EXHAUSTED
+  EXPIRED
+}
+
+model AiSummaryToken {
+  id             String       @id @default(uuid())
+  organizationId String
+  userId         String?      // The employee the token is assigned to (null if global)
+  code           String       // 6-digit code
+  usesLeft       Int          @default(2) // Total uses if individual, max uses per user if global
+  expiresAt      DateTime
+  status         TokenStatus  @default(ACTIVE)
+  createdById    String       // The HR user who created it
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user           User?        @relation("TokenUser", fields: [userId], references: [id], onDelete: Cascade)
+  createdBy      User         @relation("TokenCreator", fields: [createdById], references: [id])
+  usages         AiSummaryTokenUsage[]
+
+  @@unique([organizationId, code])
+  @@index([userId])
+  @@index([organizationId, status])
+  @@map("ai_summary_tokens")
+}
+
+model AiSummaryTokenUsage {
+  id        String   @id @default(uuid())
+  tokenId   String
+  userId    String
+  usesCount Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  token     AiSummaryToken @relation(fields: [tokenId], references: [id], onDelete: Cascade)
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([tokenId, userId])
+  @@map("ai_summary_token_usages")
 }

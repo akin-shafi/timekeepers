@@ -40,7 +40,7 @@ const createTransporter = () => {
 /**
  * Core send helper wrapper.
  */
-async function sendMailHelper(
+export async function sendMailHelper(
   to: string,
   subject: string,
   textFallback: string,

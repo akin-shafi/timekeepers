@@ -73,7 +73,8 @@ cp .env.example .env
 ```env
 DATABASE_URL="postgresql://postgres:postgres@localhost:5432/attendance_db?schema=public"
 NEXTAUTH_URL="http://localhost:3000"
-NEXTAUTH_SECRET="attendance_app_super_secret_jwt_key_2026"
+# Generate a secure random string (e.g. `openssl rand -base64 32`)
+NEXTAUTH_SECRET="<YOUR_NEXTAUTH_SECRET>"
 GOOGLE_CLIENT_ID="your-google-client-id.apps.googleusercontent.com"
 GOOGLE_CLIENT_SECRET="your-google-client-secret"
 DEFAULT_ALLOWED_DOMAIN="getrova.com"

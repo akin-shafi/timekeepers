@@ -1,4 +1,5 @@
 import React from "react";
+import { WorkArrangement } from "@prisma/client";
 import { getCurrentUser } from "@/lib/auth/guard";
 import { getHREmployeesAction, updateHREmployeeAction, updateDepartmentWorkArrangementAction } from "@/lib/actions/hr.actions";
 import { Briefcase, Building, Laptop, Edit2, Sliders, CheckCircle2 } from "lucide-react";
@@ -42,7 +43,7 @@ export default async function HRWorkArrangementsPage() {
           action={async (formData: FormData) => {
             "use server";
             const departmentId = formData.get("departmentId") as string;
-            const workArrangement = formData.get("workArrangement") as string;
+            const workArrangement = formData.get("workArrangement") as WorkArrangement;
             const reqDays = Number(formData.get("requiredOfficeDaysPerWeek") || 2);
             const workingHours = formData.get("workingHours") as string;
             

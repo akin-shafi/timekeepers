@@ -2,7 +2,7 @@
 
 import { db } from "@/lib/db";
 import { requireHR, verifyTenantAccess } from "@/lib/auth/guard";
-import { Role, AttendanceStatus, CorrectionStatus, WorkLocation, VerificationMethod, PolicyScope } from "@prisma/client";
+import { Role, AttendanceStatus, CorrectionStatus, WorkLocation, VerificationMethod, PolicyScope, ExceptionStatus, LeaveStatus, EmploymentStatus, WorkArrangement } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 
 export async function getHRDashboardMetricsAction(filters?: {
@@ -129,8 +129,8 @@ export async function getHREmployeesAction(filters?: {
       ...(filters?.departmentId
         ? { deptMemberships: { some: { departmentId: filters.departmentId } } }
         : {}),
-      ...(filters?.employmentStatus ? { employmentStatus: filters.employmentStatus } : {}),
-      ...(filters?.workArrangement ? { workArrangement: filters.workArrangement } : {}),
+      ...(filters?.employmentStatus ? { employmentStatus: filters.employmentStatus as EmploymentStatus } : {}),
+      ...(filters?.workArrangement ? { workArrangement: filters.workArrangement as WorkArrangement } : {}),
       ...(filters?.isActive !== undefined ? { isActive: filters.isActive } : {}),
     },
     include: {
@@ -351,8 +351,8 @@ export async function updateHREmployeeAction({
     ...(avatarUrl !== undefined ? { avatarUrl: avatarUrl.trim() || null } : {}),
     ...(jobTitle !== undefined ? { jobTitle } : {}),
     ...(phone !== undefined ? { phone } : {}),
-    ...(employmentStatus !== undefined ? { employmentStatus } : {}),
-    ...(workArrangement !== undefined ? { workArrangement } : {}),
+    ...(employmentStatus !== undefined ? { employmentStatus: employmentStatus as EmploymentStatus } : {}),
+    ...(workArrangement !== undefined ? { workArrangement: workArrangement as WorkArrangement } : {}),
     ...(workingHours !== undefined ? { workingHours } : {}),
   };
 
@@ -591,7 +591,7 @@ export async function getHRAttendanceExceptionsAction(filters?: {
   const exceptions = await db.attendanceException.findMany({
     where: {
       organizationId: orgId,
-      ...(filters?.status ? { status: filters.status } : {}),
+      ...(filters?.status ? { status: filters.status as ExceptionStatus } : {}),
       ...(filters?.exceptionType ? { exceptionType: filters.exceptionType } : {}),
       ...(filters?.departmentId
         ? { user: { deptMemberships: { some: { departmentId: filters.departmentId } } } }
@@ -627,7 +627,7 @@ export async function resolveAttendanceExceptionAction({
   hrComments,
 }: {
   exceptionId: string;
-  status: string; // OPEN, UNDER_REVIEW, RESOLVED, DISMISSED
+  status: ExceptionStatus; // OPEN, UNDER_REVIEW, RESOLVED, DISMISSED
   hrComments?: string;
 }) {
   const hrUser = await requireHR();
@@ -805,7 +805,7 @@ export async function getHRLeaveRequestsAction(filters?: {
   const leaves = await db.leaveRecord.findMany({
     where: {
       organizationId: orgId,
-      ...(filters?.status ? { status: filters.status } : {}),
+      ...(filters?.status ? { status: filters.status as LeaveStatus } : {}),
       ...(filters?.leaveType ? { leaveType: filters.leaveType } : {}),
       ...(filters?.departmentId
         ? { user: { deptMemberships: { some: { departmentId: filters.departmentId } } } }
@@ -915,7 +915,7 @@ export async function reviewLeaveRequestAction({
   reviewerNotes,
 }: {
   leaveId: string;
-  status: string; // APPROVED, REJECTED, CANCELLED
+  status: LeaveStatus; // APPROVED, REJECTED, CANCELLED
   reviewerNotes?: string;
 }) {
   const hrUser = await requireHR();
@@ -1276,7 +1276,7 @@ export async function updateOrganizationPolicyAction(payload: {
 
 export async function updateDepartmentWorkArrangementAction(payload: {
   departmentId: string;
-  workArrangement: string;
+  workArrangement: WorkArrangement;
   requiredOfficeDaysPerWeek: number;
   workingHours: string;
 }) {
