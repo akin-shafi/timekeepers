@@ -36,6 +36,17 @@ export default function EmployeeDashboard() {
   const [gpsError, setGpsError] = useState<string>("");
   const [showCheckoutModal, setShowCheckoutModal] = useState<boolean>(false);
   const [checkoutMilestone, setCheckoutMilestone] = useState<string>("");
+  const [showEarlyCheckoutModal, setShowEarlyCheckoutModal] = useState<boolean>(false);
+
+  const proceedWithCheckout = () => {
+    setShowEarlyCheckoutModal(false);
+    const today = new Date();
+    if (today.getDay() === 5) {
+      setShowCheckoutModal(true);
+    } else {
+      handleCheckOut();
+    }
+  };
 
   const [requiredDays, setRequiredDays] = useState<number>(8);
   const [requiredPerWeek, setRequiredPerWeek] = useState<number>(2);
@@ -406,7 +417,13 @@ export default function EmployeeDashboard() {
               <button
                 onClick={() => {
                   const today = new Date();
-                  if (today.getDay() === 5) { // 5 is Friday
+                  const checkInTime = new Date(todayRecord.checkInTime);
+                  const diffMs = today.getTime() - checkInTime.getTime();
+                  const hoursDiff = diffMs / (1000 * 60 * 60);
+
+                  if (hoursDiff < 3) {
+                    setShowEarlyCheckoutModal(true);
+                  } else if (today.getDay() === 5) { // 5 is Friday
                     setShowCheckoutModal(true);
                   } else {
                     handleCheckOut();
@@ -598,6 +615,44 @@ export default function EmployeeDashboard() {
                 className="flex-1 py-2.5 rounded-xl text-xs font-bold text-white bg-red-600 hover:bg-red-500 disabled:opacity-50 active:scale-[0.99] transition-all shadow-md shadow-red-500/20"
               >
                 {isSubmitting ? "Submitting..." : "Check Out"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Early Checkout Modal */}
+      {showEarlyCheckoutModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/40 backdrop-blur-sm">
+          <div className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 p-6 rounded-3xl max-w-sm w-full shadow-2xl space-y-4">
+            <div className="flex items-center gap-3 text-amber-500 dark:text-amber-400">
+              <div className="h-10 w-10 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center">
+                <AlertCircle className="h-5 w-5" />
+              </div>
+              <h3 className="text-base font-bold text-gray-900 dark:text-white">
+                Early Check-Out?
+              </h3>
+            </div>
+            
+            <p className="text-xs text-gray-650 dark:text-slate-300 leading-relaxed font-sans">
+              You checked in less than 3 hours ago. Are you sure you want to check out for the day?
+            </p>
+
+            <div className="flex gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowEarlyCheckoutModal(false)}
+                className="flex-1 py-2.5 rounded-xl text-xs font-semibold text-gray-700 dark:text-slate-300 bg-gray-105 dark:bg-slate-800 hover:bg-gray-200 dark:hover:bg-slate-750 transition-all border border-transparent dark:border-slate-700/50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={proceedWithCheckout}
+                disabled={isSubmitting}
+                className="flex-1 py-2.5 rounded-xl text-xs font-bold text-white bg-amber-500 hover:bg-amber-600 disabled:opacity-50 active:scale-[0.99] transition-all shadow-md shadow-amber-500/20"
+              >
+                Yes, Check Out
               </button>
             </div>
           </div>
