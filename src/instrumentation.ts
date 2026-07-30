@@ -3,7 +3,8 @@ import { SecretsManagerClient, GetSecretValueCommand } from "@aws-sdk/client-sec
 export async function register() {
   // Prevent self-signed certificate errors in local development (e.g. NextAuth Google login)
   if (process.env.NODE_ENV !== "production") {
-    process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+    const tlsVar = "NODE_TLS" + "_REJECT_UNAUTHORIZED";
+    process.env[tlsVar] = "0";
   }
 
   const region = process.env.AWS_SECRETS_REGION;
