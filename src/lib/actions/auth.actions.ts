@@ -1,7 +1,8 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { ALLOWED_DOMAIN } from "@/lib/auth";
+import { ALLOWED_DOMAIN, authOptions } from "@/lib/auth";
+import { getServerSession } from "next-auth";
 import { Role } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { sendWelcomeEmail } from "@/lib/mail";
@@ -67,7 +68,10 @@ export async function registerUserAction({
       },
     });
 
-    if (existingUser && existingUser.orgMemberships.length > 0) {
+    const session = await getServerSession(authOptions);
+    const isCompletingOwnProfile = session?.user?.email === existingUser?.email;
+
+    if (existingUser && existingUser.orgMemberships.length > 0 && !isCompletingOwnProfile) {
       return {
         success: false,
         error: "An account with this email address already exists. Please sign in instead.",
