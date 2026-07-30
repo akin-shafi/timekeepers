@@ -120,6 +120,32 @@ async function main() {
     },
   });
 
+  const dummyHr = await prisma.user.upsert({
+    where: { email: "hr.admin@getrova.com" },
+    update: {},
+    create: {
+      email: "hr.admin@getrova.com",
+      name: "Dummy HR",
+      employeeId: "EMP-HR-002",
+      jobTitle: "HR Admin",
+      phone: "+234 802 000 0000",
+      workArrangement: "OFFICE",
+      avatarUrl: "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80",
+      orgMemberships: {
+        create: {
+          organizationId: org.id,
+          role: Role.HR,
+        },
+      },
+      deptMemberships: {
+        create: {
+          departmentId: hr.id,
+          isHead: false,
+        },
+      },
+    },
+  });
+
   const deptHeadUser = await prisma.user.upsert({
     where: { email: "ahmed@getrova.com" },
     update: {},

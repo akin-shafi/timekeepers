@@ -105,6 +105,7 @@ export function Sidebar() {
     { label: "AI Tokens", href: "/hr/ai-tokens", icon: Key },
     { label: "HR Reports", href: "/hr/reports", icon: FileSpreadsheet },
     { label: "HR Analytics", href: "/hr/analytics", icon: BarChart3 },
+    { label: "Organization Settings", href: `/admin/organizations/${session?.user?.organizationId}`, icon: Sliders },
     { label: "Notifications", href: "/notifications", icon: Bell },
   ];
 
