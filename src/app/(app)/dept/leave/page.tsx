@@ -90,7 +90,7 @@ export default async function DeptLeaveManagementPage({
                         <form
                           action={async (formData: FormData) => {
                             "use server";
-                            const status = formData.get("status") as LeaveStatus;
+                            const status = formData.get("status") as "APPROVED" | "REJECTED" | "CANCELLED";
                             await reviewDeptLeaveRequestAction({ leaveId: l.id, status });
                           }}
                           className="flex items-center justify-end gap-2"
