@@ -348,7 +348,8 @@ export function getNewLeaveRequestEmailHtml(
   leaveType: string,
   startDate: string,
   endDate: string,
-  reason: string
+  reason: string,
+  reviewLink: string
 ): string {
   const title = "New Leave Request Requires Approval";
   const body = `
@@ -385,7 +386,7 @@ export function getNewLeaveRequestEmailHtml(
     <table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin: 32px 0;">
       <tr>
         <td align="center">
-          <a href="${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/auth/signin" target="_blank" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #ffffff; text-decoration: none; padding: 14px 30px; font-size: 16px; font-weight: 600; border-radius: 8px; display: inline-block; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);">
+          <a href="${reviewLink}" target="_blank" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #ffffff; text-decoration: none; padding: 14px 30px; font-size: 16px; font-weight: 600; border-radius: 8px; display: inline-block; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);">
             Review Request
           </a>
         </td>

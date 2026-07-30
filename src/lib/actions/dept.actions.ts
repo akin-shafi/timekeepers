@@ -236,8 +236,12 @@ export async function reviewDeptLeaveRequestAction({
     // Notify HR
     const hrUsers = await db.user.findMany({
       where: { 
-        role: { in: ["HR", "SUPER_ADMIN"] }, 
-        orgMemberships: { some: { organizationId: orgId } }
+        orgMemberships: { 
+          some: { 
+            organizationId: orgId,
+            role: { in: ["HR", "SUPER_ADMIN"] }
+          }
+        }
       }
     });
 

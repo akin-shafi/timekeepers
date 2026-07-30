@@ -41,8 +41,12 @@ export async function submitLeaveRequestAction(payload: SubmitLeavePayload): Pro
       // Find HR users
       const hrUsers = await db.user.findMany({
         where: { 
-          role: { in: ["HR", "SUPER_ADMIN"] }, 
-          orgMemberships: { some: { organizationId: user.organizationId } }
+          orgMemberships: { 
+            some: { 
+              organizationId: user.organizationId,
+              role: { in: ["HR", "SUPER_ADMIN"] }
+            }
+          }
         }
       });
 
@@ -72,7 +76,8 @@ export async function submitLeaveRequestAction(payload: SubmitLeavePayload): Pro
           }
         });
 
-        const reviewLink = reviewer.role === "HR" || reviewer.role === "SUPER_ADMIN"
+        const isHR = hrUsers.some(hr => hr.id === reviewer.id);
+        const reviewLink = isHR
           ? `${process.env.NEXT_PUBLIC_APP_URL}/hr/leave`
           : `${process.env.NEXT_PUBLIC_APP_URL}/dept/leave`;
 
