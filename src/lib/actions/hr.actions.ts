@@ -218,7 +218,7 @@ export async function getHREmployeeProfileAction(userId: string) {
       jobTitle: user.jobTitle || "Staff",
       role: user.orgMemberships[0]?.role || Role.EMPLOYEE,
       department: user.deptMemberships[0]?.department?.name || "Unassigned",
-      departmentId: user.deptMemberships[0]?.departmentId || null,
+      departmentId: user.deptMemberships[0]?.departmentId || "",
       employmentStatus: user.employmentStatus || "ACTIVE",
       dateJoined: user.dateJoined || user.createdAt,
       isActive: user.isActive,

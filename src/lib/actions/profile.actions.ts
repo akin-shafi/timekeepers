@@ -21,6 +21,12 @@ export async function getMyProfileAction() {
       return { success: false, error: "Profile not found." };
     }
 
+    const departments = await db.department.findMany({
+      where: { organizationId: authUser.organizationId },
+      select: { id: true, name: true },
+      orderBy: { name: "asc" },
+    });
+
     return {
       success: true,
       data: {
@@ -41,6 +47,8 @@ export async function getMyProfileAction() {
         officeDays: user.officeDays || [],
         workingHours: user.workingHours || "09:00 - 17:00",
         dateJoined: user.dateJoined || user.createdAt,
+        departmentId: user.deptMemberships[0]?.departmentId || "",
+        availableDepartments: departments,
       },
     };
   } catch (err: any) {
@@ -57,6 +65,7 @@ export async function updateMyProfileAction({
   requiredOfficeDaysPerWeek,
   officeDays,
   workArrangement,
+  departmentId,
 }: {
   name?: string;
   phone?: string;
@@ -66,6 +75,7 @@ export async function updateMyProfileAction({
   requiredOfficeDaysPerWeek?: number;
   officeDays?: string[];
   workArrangement?: WorkArrangement;
+  departmentId?: string;
 }) {
   const authUser = await requireAuth();
 
@@ -106,6 +116,25 @@ export async function updateMyProfileAction({
       where: { id: authUser.id },
       data: dataToUpdate,
     });
+
+    if (departmentId !== undefined) {
+      if (departmentId === "") {
+        await db.departmentMembership.deleteMany({
+          where: { userId: authUser.id },
+        });
+      } else {
+        await db.departmentMembership.deleteMany({
+          where: { userId: authUser.id },
+        });
+        await db.departmentMembership.create({
+          data: {
+            userId: authUser.id,
+            departmentId,
+            isHead: false,
+          },
+        });
+      }
+    }
 
     await db.auditLog.create({
       data: {

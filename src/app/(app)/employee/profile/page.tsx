@@ -19,6 +19,7 @@ export default function ProfilePage() {
   const [employmentStatus, setEmploymentStatus] = useState<EmploymentStatus>("ACTIVE");
   const [requiredOfficeDaysPerWeek, setRequiredOfficeDaysPerWeek] = useState(2);
   const [officeDays, setOfficeDays] = useState<string[]>([]);
+  const [departmentId, setDepartmentId] = useState("");
   const [profile, setProfile] = useState<ProfileData | null>(null);
 
   const [isLoading, setIsLoading] = useState(true);
@@ -39,6 +40,7 @@ export default function ProfilePage() {
           setEmploymentStatus(res.data.employmentStatus as EmploymentStatus);
           setRequiredOfficeDaysPerWeek(res.data.requiredOfficeDaysPerWeek || 2);
           setOfficeDays(res.data.officeDays || []);
+          setDepartmentId(res.data.departmentId || "");
         } else {
           setErrorMsg(res.error || "Failed to load profile.");
         }
@@ -65,7 +67,8 @@ export default function ProfilePage() {
         jobTitle, 
         employmentStatus,
         requiredOfficeDaysPerWeek,
-        officeDays
+        officeDays,
+        departmentId
       });
       if (res.success) {
         setSuccessMsg("Profile updated successfully.");
@@ -188,6 +191,21 @@ export default function ProfilePage() {
           </div>
           <div>
             <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-slate-400 mb-1.5">
+              Department
+            </label>
+            <select
+              value={departmentId}
+              onChange={(e) => setDepartmentId(e.target.value)}
+              className="w-full bg-white dark:bg-slate-800 border border-gray-300 dark:border-slate-700 rounded-xl px-3.5 py-2 text-sm text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-brand-500"
+            >
+              <option value="">Unassigned</option>
+              {profile?.availableDepartments?.map((d: any) => (
+                <option key={d.id} value={d.id}>{d.name}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-[10px] font-bold uppercase tracking-wider text-gray-500 dark:text-slate-400 mb-1.5">
               Employment Type
             </label>
             <select
@@ -253,7 +271,6 @@ export default function ProfilePage() {
           {[
             { label: "Email", value: profile?.email },
             { label: "Role", value: profile ? roleLabel[profile.role] || profile.role : "" },
-            { label: "Department", value: profile?.department },
             { label: "Work Arrangement", value: profile?.workArrangement },
             { label: "Working Hours", value: profile?.workingHours },
             {

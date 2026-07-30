@@ -18,13 +18,15 @@ interface HREmployeeEditFormProps {
     employmentStatus: string;
     workArrangement: string;
     role: string;
+    departmentId?: string | null;
   };
+  departments?: { id: string; name: string }[];
 }
 
 const EMPLOYMENT_STATUSES = ["ACTIVE", "PROBATION", "CONTRACT", "TERMINATED"];
 const WORK_ARRANGEMENTS = ["HYBRID", "REMOTE", "OFFICE"];
 
-export function HREmployeeEditForm({ userId, initial, canEditEmail = false }: HREmployeeEditFormProps) {
+export function HREmployeeEditForm({ userId, initial, canEditEmail = false, departments = [] }: HREmployeeEditFormProps) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
 
@@ -36,6 +38,7 @@ export function HREmployeeEditForm({ userId, initial, canEditEmail = false }: HR
   const [employmentStatus, setEmploymentStatus] = useState(initial.employmentStatus);
   const [workArrangement, setWorkArrangement] = useState(initial.workArrangement);
   const [role, setRole] = useState(initial.role);
+  const [departmentId, setDepartmentId] = useState(initial.departmentId || "");
 
   const [isSaving, setIsSaving] = useState(false);
   const [successMsg, setSuccessMsg] = useState("");
@@ -61,6 +64,7 @@ export function HREmployeeEditForm({ userId, initial, canEditEmail = false }: HR
         avatarUrl,
         employmentStatus,
         workArrangement,
+        departmentId: departmentId || undefined,
         role: role as any,
       });
       if (res.success) {
@@ -166,6 +170,17 @@ export function HREmployeeEditForm({ userId, initial, canEditEmail = false }: HR
                 ))}
               </select>
             </div>
+            {departments && departments.length > 0 && (
+              <div>
+                <label className={labelClass}>Department</label>
+                <select value={departmentId} onChange={(e) => setDepartmentId(e.target.value)} className={inputClass}>
+                  <option value="">Unassigned</option>
+                  {departments.map((d) => (
+                    <option key={d.id} value={d.id}>{d.name}</option>
+                  ))}
+                </select>
+              </div>
+            )}
             <div>
               <label className={labelClass}>System Role</label>
               <select

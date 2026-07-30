@@ -6,7 +6,7 @@ import { getServerSession } from "next-auth";
 import { Role } from "@prisma/client";
 import { revalidatePath } from "next/cache";
 import { sendWelcomeEmail } from "@/lib/mail";
-import { requireAuth } from "@/lib/auth/guard";
+// import { requireAuth } from "@/lib/auth/guard";
 
 export async function registerUserAction({
   email,

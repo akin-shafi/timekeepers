@@ -2,6 +2,7 @@ import React from "react";
 import Link from "next/link";
 import { getCurrentUser } from "@/lib/auth/guard";
 import { getHREmployeeProfileAction } from "@/lib/actions/hr.actions";
+import { db } from "@/lib/db";
 import {
   User,
   Building,
@@ -27,6 +28,12 @@ export default async function HREmployeeProfilePage({
 
   const { id } = await params;
   const profile = await getHREmployeeProfileAction(id);
+
+  const departments = await db.department.findMany({
+    where: { organizationId: hrUser.organizationId },
+    select: { id: true, name: true },
+    orderBy: { name: "asc" },
+  });
 
   // Cumulative stipend total
   const totalStipend = profile.stipendCalculations.reduce(
@@ -77,6 +84,7 @@ export default async function HREmployeeProfilePage({
 
           <HREmployeeEditForm
             userId={profile.user.id}
+            departments={departments}
             initial={{
               name: profile.user.name,
               email: profile.user.email,
@@ -86,6 +94,7 @@ export default async function HREmployeeProfilePage({
               employmentStatus: profile.user.employmentStatus,
               workArrangement: profile.workArrangement.arrangement,
               role: profile.user.role,
+              departmentId: profile.user.departmentId,
             }}
           />
         </div>

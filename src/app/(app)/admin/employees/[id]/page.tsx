@@ -1,7 +1,8 @@
 import React from "react";
 import Link from "next/link";
-import { requireSuperAdmin } from "@/lib/auth/guard";
+import { requireSuperAdmin, getCurrentUser } from "@/lib/auth/guard";
 import { getHREmployeeProfileAction } from "@/lib/actions/hr.actions";
+import { db } from "@/lib/db";
 import {
   User,
   Briefcase,
@@ -20,9 +21,17 @@ export default async function AdminEmployeeProfilePage({
   params: Promise<{ id: string }>;
 }) {
   await requireSuperAdmin();
+  const adminUser = await getCurrentUser();
+  if (!adminUser) return null;
 
   const { id } = await params;
   const profile = await getHREmployeeProfileAction(id);
+
+  const departments = await db.department.findMany({
+    where: { organizationId: adminUser.organizationId },
+    select: { id: true, name: true },
+    orderBy: { name: "asc" },
+  });
 
   // Cumulative stipend total
   const totalStipend = profile.stipendCalculations.reduce(
@@ -90,6 +99,7 @@ export default async function AdminEmployeeProfilePage({
           <HREmployeeEditForm
             userId={profile.user.id}
             canEditEmail={true}
+            departments={departments}
             initial={{
               name: profile.user.name,
               email: profile.user.email,
@@ -99,6 +109,7 @@ export default async function AdminEmployeeProfilePage({
               employmentStatus: profile.user.employmentStatus,
               workArrangement: profile.workArrangement.arrangement,
               role: profile.user.role,
+              departmentId: profile.user.departmentId,
             }}
           />
         </div>
