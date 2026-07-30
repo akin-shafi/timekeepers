@@ -117,6 +117,9 @@ export async function getHREmployeesAction(filters?: {
           ...(filters?.role ? { role: filters.role as Role } : {}),
         },
       },
+      email: {
+        notIn: ["alex.admin@getrova.com", "hr.admin@getrova.com"],
+      },
       ...(filters?.search
         ? {
             OR: [

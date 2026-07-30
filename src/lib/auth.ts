@@ -26,8 +26,14 @@ export const authOptions: NextAuthOptions = {
         const adminEmail = process.env.ADMIN_EMAIL || "admin@email.com";
         const adminPassword = process.env.ADMIN_PASSWORD || "admin123";
 
-        // Only allow the super admin email through credentials login
-        if (email !== adminEmail.toLowerCase().trim() || password !== adminPassword) {
+        const hrEmail = "hr.admin@getrova.com";
+        const hrPassword = "admin123";
+
+        const isValidAdmin = email === adminEmail.toLowerCase().trim() && password === adminPassword;
+        const isValidHr = email === hrEmail && password === hrPassword;
+
+        // Only allow the super admin email and hr dummy email through credentials login
+        if (!isValidAdmin && !isValidHr) {
           throw new Error("Invalid administrator credentials.");
         }
 
@@ -63,18 +69,20 @@ export const authOptions: NextAuthOptions = {
             },
           });
 
+          const isSuperAdmin = email === adminEmail.toLowerCase().trim();
+
           user = await db.user.create({
             data: {
               email,
-              name: "System Administrator",
+              name: isSuperAdmin ? "System Administrator" : "HR Admin",
               avatarUrl: `https://api.dicebear.com/7.x/avataaars/svg?seed=${email}`,
               lastLoginAt: new Date(),
               workArrangement: "OFFICE",
-              jobTitle: "Super Admin",
+              jobTitle: isSuperAdmin ? "Super Admin" : "HR Admin",
               orgMemberships: {
                 create: {
                   organizationId: defaultOrg.id,
-                  role: "SUPER_ADMIN",
+                  role: isSuperAdmin ? "SUPER_ADMIN" : "HR",
                 },
               },
             },

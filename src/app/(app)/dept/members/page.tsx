@@ -46,7 +46,12 @@ export default async function DepartmentMembersPage() {
 
   // Query actual department members, including their real organization role.
   const members = await db.departmentMembership.findMany({
-    where: { departmentId: dept.id },
+    where: { 
+      departmentId: dept.id,
+      user: {
+        email: { notIn: ["alex.admin@getrova.com", "hr.admin@getrova.com"] }
+      }
+    },
     include: {
       user: {
         include: {

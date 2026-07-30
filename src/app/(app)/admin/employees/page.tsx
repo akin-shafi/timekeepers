@@ -14,6 +14,9 @@ export default async function AdminEmployeesPage() {
       orgMemberships: {
         some: { organizationId: admin.organizationId },
       },
+      email: {
+        notIn: ["alex.admin@getrova.com", "hr.admin@getrova.com"],
+      },
     },
     include: {
       orgMemberships: {
