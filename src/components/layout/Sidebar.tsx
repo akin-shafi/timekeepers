@@ -1,9 +1,10 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { getUpcomingAndCurrentLeavesAction } from "@/lib/actions/leave.actions";
 import {
   LayoutDashboard,
   Clock,
@@ -26,19 +27,39 @@ import {
   Network,
   NotebookText,
   Key,
+  Megaphone,
 } from "lucide-react";
 
 export function Sidebar() {
   const pathname = usePathname();
   const { data: session } = useSession();
   const role = session?.user?.role || "EMPLOYEE";
+  const [bulletinCount, setBulletinCount] = useState(0);
+
+  useEffect(() => {
+    async function fetchBulletinCount() {
+      if (session?.user) {
+        try {
+          const res = await getUpcomingAndCurrentLeavesAction();
+          if (res.success && res.leaves) {
+            setBulletinCount(res.leaves.length);
+          }
+        } catch (error) {
+          console.error("Failed to fetch bulletin count:", error);
+        }
+      }
+    }
+    fetchBulletinCount();
+  }, [session]);
 
   const employeeLinks = [
     { label: "My Dashboard", href: "/employee/dashboard", icon: LayoutDashboard },
     { label: "Attendance Records", href: "/employee/attendance", icon: Clock },
     { label: "Attendance Calendar", href: "/employee/calendar", icon: CalendarDays },
+    { label: "Bulletin Board", href: "/employee/bulletin", icon: Megaphone },
     { label: "My Milestones", href: "/employee/milestones", icon: NotebookText },
     { label: "Correction Requests", href: "/employee/corrections", icon: FileCheck },
+    { label: "Leave Requests", href: "/employee/leave", icon: CalendarDays },
     { label: "My Profile", href: "/employee/profile", icon: UserCircle },
     { label: "Notifications", href: "/notifications", icon: Bell },
   ];
@@ -67,6 +88,7 @@ export function Sidebar() {
     { label: "Department Members", href: "/dept/members", icon: Users },
     { label: "Department Teams", href: "/dept/teams", icon: Network },
     { label: "Correction Requests", href: "/dept/corrections", icon: FileCheck },
+    { label: "Leave Management", href: "/dept/leave", icon: CalendarDays },
     { label: "Notifications", href: "/notifications", icon: Bell },
   ];
 
@@ -105,7 +127,12 @@ export function Sidebar() {
                   }`}
                 >
                   <Icon className={`h-4 w-4 ${isActive ? "text-white" : "text-gray-400 dark:text-slate-400"}`} />
-                  {item.label}
+                  <span className="flex-1">{item.label}</span>
+                  {item.label === "Bulletin Board" && bulletinCount > 0 && (
+                    <span className="bg-red-500 text-white text-[9px] font-bold px-1.5 py-0.5 rounded-full min-w-[20px] text-center shadow-sm">
+                      {bulletinCount}
+                    </span>
+                  )}
                 </Link>
               );
             })}

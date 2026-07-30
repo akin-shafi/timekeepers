@@ -71,6 +71,7 @@ export default async function HRLeaveManagementPage({
               <option value="Casual">Casual Leave</option>
               <option value="Maternity">Maternity</option>
               <option value="Paternity">Paternity</option>
+              <option value="Academic">Academic Leave</option>
               <option value="Unpaid">Unpaid</option>
             </select>
 

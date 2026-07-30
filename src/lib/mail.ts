@@ -7,6 +7,7 @@ import {
   getWelcomeEmailHtml,
   getCheckInReminderEmailHtml,
   getCheckOutReminderEmailHtml,
+  getNewLeaveRequestEmailHtml,
 } from "./mail-templates";
 
 // Configure SMTP Transport
@@ -164,5 +165,22 @@ export async function sendCheckOutReminderEmail(to: string, name: string, orgNam
   const text = `Time to wrap up! Don't forget to check out today on the Time Keeper dashboard.`;
   const html = getCheckOutReminderEmailHtml(name, orgName);
   return sendMailHelper(to, "Reminder: Daily Check-Out", text, html);
+}
+
+/**
+ * Sends a notification of a new leave request.
+ */
+export async function sendNewLeaveRequestEmail(
+  to: string,
+  employeeName: string,
+  leaveType: string,
+  startDate: string,
+  endDate: string,
+  reason: string,
+  reviewLink: string
+) {
+  const text = `${employeeName} has submitted a new ${leaveType} leave request from ${startDate} to ${endDate}.`;
+  const html = getNewLeaveRequestEmailHtml(employeeName, leaveType, startDate, endDate, reason, reviewLink);
+  return sendMailHelper(to, `New Leave Request: ${employeeName}`, text, html);
 }
 

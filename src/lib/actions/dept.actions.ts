@@ -101,6 +101,176 @@ export async function updateDeptMemberProfileAction({
   }
 }
 
+export async function getDeptLeaveRequestsAction(filters?: { status?: string }) {
+  const manager = await requireDepartmentHeadOrGroupManager();
+  
+  const headOf = await db.departmentMembership.findMany({
+    where: { userId: manager.id, isHead: true },
+    select: { departmentId: true }
+  });
+  const deptIds = headOf.map(d => d.departmentId);
+
+  // Users in these departments
+  const usersInDepts = await db.departmentMembership.findMany({
+    where: { departmentId: { in: deptIds } },
+    select: { userId: true }
+  });
+  const userIds = usersInDepts.map(u => u.userId);
+
+  const whereClause: any = {
+    userId: { in: userIds },
+    organizationId: manager.organizationId
+  };
+
+  if (filters?.status) {
+    whereClause.status = filters.status;
+  }
+
+  const leaves = await db.leaveRecord.findMany({
+    where: whereClause,
+    include: {
+      user: {
+        select: { name: true, employeeId: true, deptMemberships: { include: { department: true } } }
+      },
+      reviewer: { select: { name: true } }
+    },
+    orderBy: { createdAt: "desc" }
+  });
+
+  return leaves.map(l => ({
+    id: l.id,
+    employeeName: l.user.name || "Unknown",
+    employeeId: l.user.employeeId || "N/A",
+    department: l.user.deptMemberships[0]?.department?.name || "N/A",
+    startDate: l.startDate,
+    endDate: l.endDate,
+    daysCount: l.daysCount,
+    leaveType: l.leaveType,
+    reason: l.reason,
+    status: l.status,
+    reviewerNotes: l.reviewerNotes,
+    reviewerName: l.reviewer?.name || null,
+    createdAt: l.createdAt
+  }));
+}
+
+export async function reviewDeptLeaveRequestAction({
+  leaveId,
+  status,
+  reviewerNotes,
+}: {
+  leaveId: string;
+  status: "APPROVED" | "REJECTED" | "CANCELLED";
+  reviewerNotes?: string;
+}) {
+  const manager = await requireDepartmentHead();
+  const orgId = manager.organizationId;
+
+  const leave = await db.leaveRecord.findUnique({
+    where: { id: leaveId },
+    include: { user: { include: { deptMemberships: true } } }
+  });
+
+  if (!leave || leave.organizationId !== orgId) {
+    return { success: false, error: "Leave record not found." };
+  }
+
+  // Verify Dept Head scope
+  const headOf = await db.departmentMembership.findMany({
+    where: { userId: manager.id, isHead: true },
+    select: { departmentId: true },
+  });
+  const headDeptIds = new Set(headOf.map((d) => d.departmentId));
+  const targetDeptIds = leave.user.deptMemberships.map((d) => d.departmentId);
+  const sharesDept = targetDeptIds.some((id) => headDeptIds.has(id));
+
+  if (!sharesDept && manager.role !== "SUPER_ADMIN" && manager.role !== "HR") {
+    return { success: false, error: "You can only review leave requests for your own department members." };
+  }
+
+  await db.leaveRecord.update({
+    where: { id: leaveId },
+    data: {
+      status,
+      reviewerNotes,
+      reviewerId: manager.id,
+    },
+  });
+
+  await db.auditLog.create({
+    data: {
+      organizationId: orgId,
+      userId: manager.id,
+      action: status === "APPROVED" ? "LEAVE_APPROVED_BY_DEPT" : "LEAVE_REJECTED_BY_DEPT",
+      entity: "LeaveRecord",
+      entityId: leaveId,
+      newValue: { status, reviewerNotes },
+    },
+  });
+
+  // Notify the employee and HR
+  try {
+    const employee = leave.user;
+    
+    // Notify employee
+    await db.notification.create({
+      data: {
+        organizationId: orgId,
+        userId: employee.id,
+        title: `Leave Request ${status === "APPROVED" ? "Approved" : "Rejected"}`,
+        message: `Your leave request starting ${new Date(leave.startDate).toISOString().split("T")[0]} has been ${status.toLowerCase()} by your Department Head.`,
+        type: "LEAVE",
+      },
+    });
+    
+    const { sendLeaveStatusEmail } = await import("@/lib/mail");
+    await sendLeaveStatusEmail(
+      employee.email, 
+      leave.leaveType, 
+      new Date(leave.startDate).toISOString().split("T")[0], 
+      new Date(leave.endDate).toISOString().split("T")[0], 
+      status as any, 
+      reviewerNotes || undefined
+    );
+
+    // Notify HR
+    const hrUsers = await db.user.findMany({
+      where: { 
+        role: { in: ["HR", "SUPER_ADMIN"] }, 
+        orgMemberships: { some: { organizationId: orgId } }
+      }
+    });
+
+    for (const hr of hrUsers) {
+      await db.notification.create({
+        data: {
+          organizationId: orgId,
+          userId: hr.id,
+          title: `Leave Request ${status === "APPROVED" ? "Approved" : "Rejected"}`,
+          message: `${employee.name || employee.email}'s leave request has been ${status.toLowerCase()} by Dept Head.`,
+          type: "LEAVE",
+        }
+      });
+      await sendLeaveStatusEmail(
+        hr.email, 
+        leave.leaveType, 
+        new Date(leave.startDate).toISOString().split("T")[0], 
+        new Date(leave.endDate).toISOString().split("T")[0], 
+        status as any, 
+        reviewerNotes ? `(Dept Head Note): ${reviewerNotes}` : undefined
+      );
+    }
+  } catch (err) {
+    console.error("Failed to notify users of leave review:", err);
+  }
+
+  revalidatePath("/dept/leave");
+  revalidatePath("/notifications");
+  revalidatePath("/dept/dashboard");
+
+  return { success: true };
+}
+
 export async function getDeptAttendanceRecordsAction(filters?: {
   startDate?: string;
   endDate?: string;

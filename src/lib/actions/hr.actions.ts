@@ -949,19 +949,59 @@ export async function reviewLeaveRequestAction({
     },
   });
 
-  // Notify the employee
+  // Notify the employee and Dept Heads
   try {
-    await db.notification.create({
-      data: {
-        organizationId: orgId,
-        userId: leave.userId,
-        title: `Leave Request ${status === "APPROVED" ? "Approved" : "Rejected"}`,
-        message: `Your leave request starting ${new Date(leave.startDate).toISOString().split("T")[0]} has been ${status.toLowerCase()} by HR.`,
-        type: "LEAVE",
-      },
-    });
+    const employee = await db.user.findUnique({ where: { id: leave.userId } });
+    if (employee) {
+      await db.notification.create({
+        data: {
+          organizationId: orgId,
+          userId: employee.id,
+          title: `Leave Request ${status === "APPROVED" ? "Approved" : "Rejected"}`,
+          message: `Your leave request starting ${new Date(leave.startDate).toISOString().split("T")[0]} has been ${status.toLowerCase()} by HR.`,
+          type: "LEAVE",
+        },
+      });
+      
+      const { sendLeaveStatusEmail } = await import("@/lib/mail");
+      await sendLeaveStatusEmail(
+        employee.email, 
+        leave.leaveType, 
+        new Date(leave.startDate).toISOString().split("T")[0], 
+        new Date(leave.endDate).toISOString().split("T")[0], 
+        status as any, 
+        reviewerNotes || undefined
+      );
+
+      // Notify Dept Heads
+      const deptMemberships = await db.departmentMembership.findMany({ where: { userId: employee.id } });
+      const deptIds = deptMemberships.map((d) => d.departmentId);
+      const deptHeads = await db.user.findMany({
+        where: { deptMemberships: { some: { departmentId: { in: deptIds }, isHead: true } } }
+      });
+
+      for (const head of deptHeads) {
+        await db.notification.create({
+          data: {
+            organizationId: orgId,
+            userId: head.id,
+            title: `Leave Request ${status === "APPROVED" ? "Approved" : "Rejected"}`,
+            message: `${employee.name || employee.email}'s leave request has been ${status.toLowerCase()} by HR.`,
+            type: "LEAVE",
+          }
+        });
+        await sendLeaveStatusEmail(
+          head.email, 
+          leave.leaveType, 
+          new Date(leave.startDate).toISOString().split("T")[0], 
+          new Date(leave.endDate).toISOString().split("T")[0], 
+          status as any, 
+          reviewerNotes ? `(HR Note): ${reviewerNotes}` : undefined
+        );
+      }
+    }
   } catch (err) {
-    console.error("Failed to notify user of leave review:", err);
+    console.error("Failed to notify users of leave review:", err);
   }
 
   revalidatePath("/hr/leave");

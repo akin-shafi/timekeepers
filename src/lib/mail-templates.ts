@@ -339,3 +339,58 @@ export function getCheckOutReminderEmailHtml(employeeName: string, orgName: stri
   `;
   return getEmailLayout(title, body);
 }
+
+/**
+ * 8. New Leave Request Email Template (Manager/HR Notification)
+ */
+export function getNewLeaveRequestEmailHtml(
+  employeeName: string,
+  leaveType: string,
+  startDate: string,
+  endDate: string,
+  reason: string
+): string {
+  const title = "New Leave Request Requires Approval";
+  const body = `
+    <h1 style="font-size: 20px; font-weight: 700; color: #f8fafc; margin: 0 0 16px 0; text-align: center;">
+      New Leave Request
+    </h1>
+    <p style="font-size: 15px; line-height: 24px; color: #cbd5e1; margin: 0 0 24px 0; text-align: center;">
+      <strong>${employeeName}</strong> has submitted a new leave request that requires your review and approval.
+    </p>
+
+    <!-- Details card -->
+    <table width="100%" border="0" cellspacing="0" cellpadding="0" style="background: #0f172a; border-radius: 8px; border: 1px solid #334155; margin: 24px 0; padding: 16px;">
+      <tr>
+        <td style="font-size: 14px; color: #94a3b8; padding: 6px 0;"><strong>Employee:</strong></td>
+        <td style="font-size: 14px; color: #f8fafc; padding: 6px 0; text-align: right;">${employeeName}</td>
+      </tr>
+      <tr>
+        <td style="font-size: 14px; color: #94a3b8; padding: 6px 0;"><strong>Leave Type:</strong></td>
+        <td style="font-size: 14px; color: #f8fafc; padding: 6px 0; text-align: right;">${leaveType}</td>
+      </tr>
+      <tr>
+        <td style="font-size: 14px; color: #94a3b8; padding: 6px 0;"><strong>Duration:</strong></td>
+        <td style="font-size: 14px; color: #f8fafc; padding: 6px 0; text-align: right;">${startDate} to ${endDate}</td>
+      </tr>
+      <tr>
+        <td style="font-size: 14px; color: #94a3b8; padding: 6px 0; vertical-align: top;"><strong>Reason:</strong></td>
+        <td style="font-size: 14px; color: #cbd5e1; padding: 6px 0; text-align: right; font-style: italic;">
+          "${reason}"
+        </td>
+      </tr>
+    </table>
+
+    <!-- CTA Button Container -->
+    <table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin: 32px 0;">
+      <tr>
+        <td align="center">
+          <a href="${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/auth/signin" target="_blank" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #ffffff; text-decoration: none; padding: 14px 30px; font-size: 16px; font-weight: 600; border-radius: 8px; display: inline-block; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);">
+            Review Request
+          </a>
+        </td>
+      </tr>
+    </table>
+  `;
+  return getEmailLayout(title, body);
+}

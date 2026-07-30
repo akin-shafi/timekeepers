@@ -1,6 +1,11 @@
 import { SecretsManagerClient, GetSecretValueCommand } from "@aws-sdk/client-secrets-manager";
 
 export async function register() {
+  // Prevent self-signed certificate errors in local development (e.g. NextAuth Google login)
+  if (process.env.NODE_ENV !== "production") {
+    process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+  }
+
   const region = process.env.AWS_SECRETS_REGION;
   const secretName = process.env.AWS_SECRETS_NAME;
 
@@ -29,9 +34,12 @@ export async function register() {
       }
     } catch (error) {
       console.error("[Instrumentation] Failed to fetch secrets from AWS:", error);
-      // Depending on strictness, you could throw the error to crash the server startup 
-      // if secrets are absolutely critical and missing.
-      throw error; 
+      // Only crash the server in production. In local dev, we rely on local .env variables.
+      if (process.env.NODE_ENV === "production") {
+        throw error;
+      } else {
+        console.warn("[Instrumentation] Non-production environment detected. Continuing with local environment variables...");
+      }
     }
   } else {
     console.log("[Instrumentation] AWS_SECRETS_REGION or AWS_SECRETS_NAME not provided, skipping AWS Secrets Manager.");

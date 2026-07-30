@@ -56,6 +56,20 @@ export async function checkInAction(payload: CheckInPayload) {
     return { success: false, error: "You have already checked in for today." };
   }
 
+  // Check if user is on an approved leave today
+  const activeLeave = await db.leaveRecord.findFirst({
+    where: {
+      userId: user.id,
+      status: "APPROVED",
+      startDate: { lte: today },
+      endDate: { gte: today }
+    }
+  });
+
+  if (activeLeave) {
+    return { success: false, error: `You cannot check in because you are on an approved ${activeLeave.leaveType} leave today.` };
+  }
+
   // Get organization settings
   const org = await db.organization.findUnique({
     where: { id: user.organizationId },
