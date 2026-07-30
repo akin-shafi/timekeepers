@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { getUpcomingAndCurrentLeavesAction } from "@/lib/actions/leave.actions";
+import { getOrganizationSettingsAction } from "@/lib/actions/organization.actions";
 import {
   LayoutDashboard,
   Clock,
@@ -35,22 +36,47 @@ export function Sidebar() {
   const { data: session } = useSession();
   const role = session?.user?.role || "EMPLOYEE";
   const [bulletinCount, setBulletinCount] = useState(0);
+  const [disabledModules, setDisabledModules] = useState<string[]>([]);
 
   useEffect(() => {
-    async function fetchBulletinCount() {
+    async function fetchData() {
       if (session?.user) {
         try {
           const res = await getUpcomingAndCurrentLeavesAction();
           if (res.success && res.leaves) {
             setBulletinCount(res.leaves.length);
           }
+          
+          const orgRes = await getOrganizationSettingsAction();
+          if (orgRes.success && orgRes.settings) {
+            setDisabledModules(orgRes.settings.disabledModules);
+          }
         } catch (error) {
-          console.error("Failed to fetch bulletin count:", error);
+          console.error("Failed to fetch sidebar data:", error);
         }
       }
     }
-    fetchBulletinCount();
+    fetchData();
   }, [session]);
+
+  const isModuleDisabled = (label: string) => {
+    const map: Record<string, string[]> = {
+      ATTENDANCE: ["Attendance Records", "Attendance Log", "Department Daily Log", "Exceptions"],
+      CALENDAR: ["Attendance Calendar"],
+      LEAVE: ["Leave Requests", "Leave Management"],
+      BULLETIN: ["Bulletin Board"],
+      CORRECTIONS: ["Correction Requests", "Corrections"],
+      MILESTONES: ["My Milestones"],
+      STIPENDS: ["Transport Stipend"],
+    };
+
+    for (const [module, labels] of Object.entries(map)) {
+      if (disabledModules.includes(module) && labels.includes(label)) {
+        return true;
+      }
+    }
+    return false;
+  };
 
   const employeeLinks = [
     { label: "My Dashboard", href: "/employee/dashboard", icon: LayoutDashboard },
@@ -113,7 +139,7 @@ export function Sidebar() {
             Employee Workspace
           </p>
           <nav className="space-y-1">
-            {employeeLinks.map((item) => {
+            {employeeLinks.filter(item => !isModuleDisabled(item.label)).map((item) => {
               const Icon = item.icon;
               const isActive = pathname === item.href;
               return (
@@ -150,7 +176,7 @@ export function Sidebar() {
               </span>
             </p>
             <nav className="space-y-1">
-              {hrLinks.map((item) => {
+              {hrLinks.filter(item => !isModuleDisabled(item.label)).map((item) => {
                 const Icon = item.icon;
                 const isActive = pathname === item.href;
                 return (
@@ -183,6 +209,7 @@ export function Sidebar() {
             </p>
             <nav className="space-y-1">
               {deptHeadLinks
+                .filter((item) => !isModuleDisabled(item.label))
                 .filter((item) => {
                   // Only Department Heads (and Admins/HR) can manage/configure teams
                   if (item.href === "/dept/teams") {

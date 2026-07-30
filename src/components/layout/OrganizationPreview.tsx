@@ -17,6 +17,7 @@ const TABS = [
   { key: "policies", label: "Hybrid Work Policies", icon: Sliders },
   { key: "geofencing", label: "Office Geofencing", icon: MapPin },
   { key: "stipend", label: "Transport Stipend", icon: Banknote },
+  { key: "modules", label: "Modules", icon: Sliders },
   { key: "audit", label: "Audit Logs", icon: History },
 ] as const;
 
@@ -73,6 +74,7 @@ export function OrganizationPreview({ data }: { data: any }) {
         {tab === "policies" && <PoliciesTab policies={org.policies} org={org} />}
         {tab === "geofencing" && <GeofencingTab locations={org.officeLocations} />}
         {tab === "stipend" && <StipendTab policies={org.stipendPolicies} />}
+        {tab === "modules" && <ModulesTab org={org} />}
         {tab === "audit" && <AuditTab logs={org.auditLogs} />}
       </div>
     </div>
@@ -428,6 +430,81 @@ function Empty({ message }: { message: string }) {
   return (
     <div className="text-center py-16 text-gray-400 dark:text-slate-500">
       <p className="text-sm">{message}</p>
+    </div>
+  );
+}
+
+import { updateOrganizationModulesAction } from "@/lib/actions/organization.actions";
+
+function ModulesTab({ org }: { org: any }) {
+  const router = useRouter();
+  const [disabledModules, setDisabledModules] = useState<string[]>(org.disabledModules || []);
+  const [isPending, startTransition] = useTransition();
+
+  const MODULES = [
+    { key: "ATTENDANCE", label: "Attendance Module", description: "Log, track, and manage employee attendance." },
+    { key: "CALENDAR", label: "Calendar", description: "View check-in times visually on a calendar." },
+    { key: "LEAVE", label: "Leave Management", description: "Request, review, and approve leave requests." },
+    { key: "BULLETIN", label: "Bulletin Board", description: "View announcements and global updates." },
+    { key: "CORRECTIONS", label: "Corrections", description: "Allow employees to submit timesheet corrections." },
+    { key: "MILESTONES", label: "Milestones", description: "Employee performance tracking and milestones." },
+    { key: "STIPENDS", label: "Transport Stipends", description: "Manage commuting allowances and stipends." },
+  ];
+
+  const handleToggle = (moduleKey: string) => {
+    let next: string[];
+    if (disabledModules.includes(moduleKey)) {
+      next = disabledModules.filter(m => m !== moduleKey);
+    } else {
+      next = [...disabledModules, moduleKey];
+    }
+    setDisabledModules(next);
+
+    startTransition(async () => {
+      try {
+        await updateOrganizationModulesAction(org.id, next);
+        router.refresh();
+      } catch (err) {
+        console.error(err);
+      }
+    });
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-xl p-4">
+        <h3 className="text-sm font-bold text-gray-900 dark:text-white mb-4">Module Configuration</h3>
+        <p className="text-xs text-gray-500 dark:text-slate-400 mb-6">
+          Toggle these modules on or off for your entire organization. Disabling a module hides it from all users in the sidebar.
+        </p>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {MODULES.map(({ key, label, description }) => {
+            const isEnabled = !disabledModules.includes(key);
+            return (
+              <div key={key} className="flex items-center justify-between p-4 border border-gray-100 dark:border-slate-800 rounded-lg">
+                <div>
+                  <p className="text-sm font-bold text-gray-900 dark:text-white">{label}</p>
+                  <p className="text-xs text-gray-500 dark:text-slate-400 mt-0.5">{description}</p>
+                </div>
+                <button
+                  disabled={isPending}
+                  onClick={() => handleToggle(key)}
+                  className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none disabled:opacity-50 ${
+                    isEnabled ? 'bg-purple-600' : 'bg-gray-200 dark:bg-slate-700'
+                  }`}
+                >
+                  <span
+                    className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                      isEnabled ? 'translate-x-4' : 'translate-x-0'
+                    }`}
+                  />
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      </div>
     </div>
   );
 }

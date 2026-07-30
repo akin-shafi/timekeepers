@@ -1,7 +1,7 @@
 "use server";
 
 import { db } from "@/lib/db";
-import { requireSuperAdmin } from "@/lib/auth/guard";
+import { requireSuperAdmin, requireRole, requireAuth } from "@/lib/auth/guard";
 import { revalidatePath } from "next/cache";
 
 import { VerificationMethod } from "@prisma/client";
@@ -183,5 +183,64 @@ export async function deleteOrganizationAction(orgId: string) {
     return { success: true };
   } catch (err: any) {
     return { success: false, error: err.message || "Failed to delete organization." };
+  }
+}
+
+/**
+ * Fetch organization settings for the current user (Accessible to all authenticated users).
+ */
+export async function getOrganizationSettingsAction() {
+  try {
+    const user = await requireAuth();
+    
+    const org = await db.organization.findUnique({
+      where: { id: user.organizationId },
+      select: {
+        disabledModules: true,
+      },
+    });
+
+    if (!org) return { success: false, error: "Organization not found" };
+
+    return { success: true, settings: org };
+  } catch (error: any) {
+    return { success: false, error: error.message || "Failed to fetch settings" };
+  }
+}
+
+/**
+ * Update the disabled modules list for an organization (HR or Super Admin only).
+ */
+export async function updateOrganizationModulesAction(orgId: string, disabledModules: string[]) {
+  try {
+    const user = await requireRole(["SUPER_ADMIN", "HR"]);
+    
+    if (user.role === "HR" && user.organizationId !== orgId) {
+      return { success: false, error: "You do not have permission to modify this organization." };
+    }
+
+    const org = await db.organization.update({
+      where: { id: orgId },
+      data: {
+        disabledModules,
+      },
+    });
+
+    await db.auditLog.create({
+      data: {
+        organizationId: orgId,
+        userId: user.id,
+        action: "ORGANIZATION_MODULES_UPDATED",
+        entity: "Organization",
+        entityId: org.id,
+        newValue: { disabledModules },
+      },
+    });
+
+    revalidatePath("/admin/organizations");
+    revalidatePath("/admin/organizations/" + orgId);
+    return { success: true, organization: org };
+  } catch (err: any) {
+    return { success: false, error: err.message || "Failed to update organization modules." };
   }
 }
