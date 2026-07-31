@@ -37,7 +37,7 @@ export default async function BulletinBoardPage() {
                       <h3 className="font-bold text-sm text-gray-900 dark:text-white">{l.user.name}</h3>
                       <p className="text-[10px] text-gray-500 font-mono mt-0.5">{l.user.deptMemberships?.[0]?.department?.name || "N/A"}</p>
                     </div>
-                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold \${isCurrent ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 border border-amber-200 dark:border-amber-800' : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 border border-blue-200 dark:border-blue-800'}`}>
+                    <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${isCurrent ? 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 border border-amber-200 dark:border-amber-800' : 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400 border border-blue-200 dark:border-blue-800'}`}>
                       {isCurrent ? "ON LEAVE NOW" : "UPCOMING"}
                     </span>
                   </div>

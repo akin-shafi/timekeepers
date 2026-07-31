@@ -74,7 +74,7 @@ export default async function DeptLeaveManagementPage({
                     <td className="px-6 py-4 text-gray-600 dark:text-slate-300 max-w-xs">{l.reason || "N/A"}</td>
                     <td className="px-6 py-4">
                       <span
-                        className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold \${
+                        className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
                           l.status === "APPROVED"
                             ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
                             : l.status === "REJECTED"
@@ -114,7 +114,7 @@ export default async function DeptLeaveManagementPage({
                         </form>
                       ) : (
                         <span className="text-[11px] text-gray-500 dark:text-slate-400 font-mono">
-                          {l.reviewerName ? `By \${l.reviewerName}` : "Processed"}
+                          {l.reviewerName ? `By ${l.reviewerName}` : "Processed"}
                         </span>
                       )}
                     </td>
