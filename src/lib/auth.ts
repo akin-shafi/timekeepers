@@ -26,11 +26,14 @@ export const authOptions: NextAuthOptions = {
         const adminEmail = process.env.ADMIN_EMAIL || "admin@email.com";
         const adminPassword = process.env.ADMIN_PASSWORD || "admin123";
 
-        const hrEmail = "hr.admin@getrova.com";
-        const hrPassword = "admin123";
-
         const isValidAdmin = email === adminEmail.toLowerCase().trim() && password === adminPassword;
-        const isValidHr = email === hrEmail && password === hrPassword;
+        
+        let isValidHr = false;
+        if (process.env.NODE_ENV === "development") {
+          const hrEmail = process.env.DUMMY_HR_EMAIL || "hr.admin@getrova.com";
+          const hrPassword = process.env.DUMMY_HR_PASSWORD || "admin123";
+          isValidHr = email === hrEmail && password === hrPassword;
+        }
 
         // Only allow the super admin email and hr dummy email through credentials login
         if (!isValidAdmin && !isValidHr) {
