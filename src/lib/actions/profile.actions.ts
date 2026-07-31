@@ -112,44 +112,53 @@ export async function updateMyProfileAction({
       ...(officeDays !== undefined ? { officeDays } : {}),
     };
 
-    await db.user.update({
-      where: { id: authUser.id },
-      data: dataToUpdate,
-    });
-
-    if (departmentId !== undefined) {
-      if (departmentId === "") {
-        await db.departmentMembership.deleteMany({
-          where: { userId: authUser.id },
-        });
-      } else {
-        await db.departmentMembership.deleteMany({
-          where: { userId: authUser.id },
-        });
-        await db.departmentMembership.create({
-          data: {
-            userId: authUser.id,
-            departmentId,
-            isHead: false,
-          },
-        });
+    if (departmentId !== undefined && departmentId !== "") {
+      const dept = await db.department.findUnique({
+        where: { id: departmentId },
+        select: { organizationId: true },
+      });
+      if (!dept || dept.organizationId !== authUser.organizationId) {
+        return { success: false, error: "Invalid department." };
       }
     }
 
-    await db.auditLog.create({
-      data: {
-        organizationId: authUser.organizationId,
-        userId: authUser.id,
-        action: "PROFILE_SELF_UPDATED",
-        entity: "User",
-        entityId: authUser.id,
-        previousValue: {
-          name: existing.name,
-          phone: existing.phone,
-          avatarUrl: existing.avatarUrl,
+    await db.$transaction(async (tx) => {
+      await tx.user.update({
+        where: { id: authUser.id },
+        data: dataToUpdate,
+      });
+
+      if (departmentId !== undefined) {
+        await tx.departmentMembership.deleteMany({
+          where: { userId: authUser.id },
+        });
+        
+        if (departmentId !== "") {
+          await tx.departmentMembership.create({
+            data: {
+              userId: authUser.id,
+              departmentId,
+              isHead: false,
+            },
+          });
+        }
+      }
+
+      await tx.auditLog.create({
+        data: {
+          organizationId: authUser.organizationId,
+          userId: authUser.id,
+          action: "PROFILE_SELF_UPDATED",
+          entity: "User",
+          entityId: authUser.id,
+          previousValue: {
+            name: existing.name,
+            phone: existing.phone,
+            avatarUrl: existing.avatarUrl,
+          },
+          newValue: dataToUpdate,
         },
-        newValue: dataToUpdate,
-      },
+      });
     });
 
     revalidatePath("/employee/profile");
