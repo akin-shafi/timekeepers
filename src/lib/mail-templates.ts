@@ -1,4 +1,16 @@
 /**
+ * Helper to escape HTML characters from user input
+ */
+function escapeHtml(unsafe: string): string {
+  return unsafe
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+/**
  * Base HTML wrapper to enforce consistent styling, branding, and responsiveness across all system emails.
  */
 function getEmailLayout(title: string, bodyHtml: string): string {
@@ -377,7 +389,7 @@ export function getNewLeaveRequestEmailHtml(
       <tr>
         <td style="font-size: 14px; color: #94a3b8; padding: 6px 0; vertical-align: top;"><strong>Reason:</strong></td>
         <td style="font-size: 14px; color: #cbd5e1; padding: 6px 0; text-align: right; font-style: italic;">
-          "${reason}"
+          "${escapeHtml(reason)}"
         </td>
       </tr>
     </table>

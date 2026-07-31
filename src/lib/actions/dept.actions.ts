@@ -104,21 +104,36 @@ export async function updateDeptMemberProfileAction({
 export async function getDeptLeaveRequestsAction(filters?: { status?: string }) {
   const manager = await requireDepartmentHeadOrGroupManager();
   
-  const headOf = await db.departmentMembership.findMany({
-    where: { userId: manager.id, isHead: true },
-    select: { departmentId: true }
+  const deptMembership = await db.departmentMembership.findFirst({
+    where: { userId: manager.id },
+    select: { departmentId: true, isHead: true },
   });
-  const deptIds = headOf.map(d => d.departmentId);
 
-  // Users in these departments
-  const usersInDepts = await db.departmentMembership.findMany({
-    where: { departmentId: { in: deptIds } },
-    select: { userId: true }
-  });
-  const userIds = usersInDepts.map(u => u.userId);
+  if (!deptMembership || !deptMembership.departmentId) {
+    return [];
+  }
+
+  const deptId = deptMembership.departmentId;
+
+  let allowedUserIds: string[] | undefined = undefined;
+  if (manager.role !== Role.SUPER_ADMIN && manager.role !== Role.HR && !deptMembership.isHead) {
+    const managedGroups = await db.group.findMany({
+      where: { managerId: manager.id },
+      include: {
+        memberships: { select: { userId: true } },
+      },
+    });
+    allowedUserIds = managedGroups.flatMap((g) => g.memberships.map((m) => m.userId));
+  } else {
+    const usersInDepts = await db.departmentMembership.findMany({
+      where: { departmentId: deptId },
+      select: { userId: true }
+    });
+    allowedUserIds = usersInDepts.map(u => u.userId);
+  }
 
   const whereClause: any = {
-    userId: { in: userIds },
+    userId: { in: allowedUserIds },
     organizationId: manager.organizationId
   };
 
