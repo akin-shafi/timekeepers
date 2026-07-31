@@ -17,6 +17,9 @@ export default async function EmployeeCalendarPage({ searchParams }: { searchPar
   const startOfMonth = new Date(currentYear, currentMonth, 1);
   const endOfMonth = new Date(currentYear, currentMonth + 1, 0);
   
+  const startOfMonthUTC = new Date(Date.UTC(currentYear, currentMonth, 1));
+  const endOfMonthUTC = new Date(Date.UTC(currentYear, currentMonth + 1, 0, 23, 59, 59, 999));
+  
   const prevMonthDate = new Date(currentYear, currentMonth - 1, 1);
   const nextMonthDate = new Date(currentYear, currentMonth + 1, 1);
 
@@ -24,8 +27,8 @@ export default async function EmployeeCalendarPage({ searchParams }: { searchPar
     where: {
       userId: user.id,
       workDate: {
-        gte: startOfMonth,
-        lte: endOfMonth,
+        gte: startOfMonthUTC,
+        lte: endOfMonthUTC,
       },
     },
   });
@@ -34,8 +37,8 @@ export default async function EmployeeCalendarPage({ searchParams }: { searchPar
     where: {
       userId: user.id,
       status: "APPROVED",
-      startDate: { lte: endOfMonth },
-      endDate: { gte: startOfMonth }
+      startDate: { lte: endOfMonthUTC },
+      endDate: { gte: startOfMonthUTC }
     }
   });
 
@@ -43,8 +46,8 @@ export default async function EmployeeCalendarPage({ searchParams }: { searchPar
     where: {
       userId: user.id,
       workDate: {
-        gte: startOfMonth,
-        lte: endOfMonth,
+        gte: startOfMonthUTC,
+        lte: endOfMonthUTC,
       },
     },
   });
@@ -55,7 +58,7 @@ export default async function EmployeeCalendarPage({ searchParams }: { searchPar
 
   const recordMap = new Map();
   records.forEach((r) => {
-    const key = formatDateLocal(new Date(r.workDate));
+    const key = r.workDate.toISOString().split("T")[0];
     recordMap.set(key, r);
   });
 
@@ -64,8 +67,8 @@ export default async function EmployeeCalendarPage({ searchParams }: { searchPar
     let curr = new Date(l.startDate);
     const end = new Date(l.endDate);
     while (curr <= end) {
-      if (curr >= startOfMonth && curr <= endOfMonth) {
-        leaveMap.set(formatDateLocal(curr), l);
+      if (curr >= startOfMonthUTC && curr <= endOfMonthUTC) {
+        leaveMap.set(curr.toISOString().split("T")[0], l);
       }
       curr.setDate(curr.getDate() + 1);
     }
@@ -73,7 +76,7 @@ export default async function EmployeeCalendarPage({ searchParams }: { searchPar
 
   const exceptionMap = new Map();
   exceptions.forEach((e) => {
-    const key = formatDateLocal(new Date(e.workDate));
+    const key = e.workDate.toISOString().split("T")[0];
     if (!exceptionMap.has(key)) {
       exceptionMap.set(key, []);
     }

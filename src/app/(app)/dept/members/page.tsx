@@ -49,7 +49,7 @@ export default async function DepartmentMembersPage() {
     where: { 
       departmentId: dept.id,
       user: {
-        email: { notIn: ["alex.admin@getrova.com", "hr.admin@getrova.com"] }
+        email: { notIn: ["hr.admin@getrova.com"] }
       }
     },
     include: {

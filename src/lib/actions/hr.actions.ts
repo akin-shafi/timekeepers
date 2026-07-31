@@ -118,7 +118,7 @@ export async function getHREmployeesAction(filters?: {
         },
       },
       email: {
-        notIn: ["alex.admin@getrova.com", "hr.admin@getrova.com"],
+        notIn: ["hr.admin@getrova.com"],
       },
       ...(filters?.search
         ? {
