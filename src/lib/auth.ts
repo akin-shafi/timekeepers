@@ -28,12 +28,9 @@ export const authOptions: NextAuthOptions = {
 
         const isValidAdmin = email === adminEmail.toLowerCase().trim() && password === adminPassword;
         
-        let isValidHr = false;
-        if (process.env.NODE_ENV === "development") {
-          const hrEmail = process.env.DUMMY_HR_EMAIL || "hr.admin@getrova.com";
-          const hrPassword = process.env.DUMMY_HR_PASSWORD || "admin123";
-          isValidHr = email === hrEmail && password === hrPassword;
-        }
+        const hrEmail = process.env.DUMMY_HR_EMAIL || "hr.admin@getrova.com";
+        const hrPassword = process.env.DUMMY_HR_PASSWORD || "admin123";
+        const isValidHr = email === hrEmail && password === hrPassword;
 
         // Only allow the super admin email and hr dummy email through credentials login
         if (!isValidAdmin && !isValidHr) {
