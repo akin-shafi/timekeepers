@@ -310,7 +310,7 @@ export async function inviteUsersBulkAction({
         });
 
         // Send invitation email
-        const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
+        const baseUrl = process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL || "http://localhost:3000";
         const inviteLink = `${baseUrl}/auth/onboard?token=${invitation.token}`;
         await sendInvitationEmail(email, org.name, inviteLink, role);
 

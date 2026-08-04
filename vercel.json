@@ -6,7 +6,7 @@
     },
     {
       "path": "/api/cron/remind-checkout",
-      "schedule": "30 15 * * 1-5"
+      "schedule": "30 16 * * 1-5"
     }
   ]
 }

@@ -33,7 +33,7 @@ export async function GET(req: NextRequest) {
             workDate: today,
             checkOutTime: null,
             status: {
-              in: ["CHECKED_IN", "WORKING", "LATE", "APPROVED"],
+              in: ["CHECKED_IN", "WORKING", "LATE", "APPROVED", "REMOTE", "OFFICE", "PENDING_APPROVAL"],
             },
           },
         },

@@ -274,7 +274,7 @@ export function getWelcomeEmailHtml(employeeName: string, orgName: string): stri
     <table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin: 32px 0;">
       <tr>
         <td align="center">
-          <a href="${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/auth/signin" target="_blank" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #ffffff; text-decoration: none; padding: 14px 30px; font-size: 16px; font-weight: 600; border-radius: 8px; display: inline-block; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);">
+          <a href="${process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL || 'http://localhost:3000'}/auth/signin" target="_blank" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #ffffff; text-decoration: none; padding: 14px 30px; font-size: 16px; font-weight: 600; border-radius: 8px; display: inline-block; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);">
             Sign In to mark your attendance
           </a>
         </td>
@@ -308,7 +308,7 @@ export function getCheckInReminderEmailHtml(employeeName: string, orgName: strin
     <table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin: 32px 0;">
       <tr>
         <td align="center">
-          <a href="${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/auth/signin" target="_blank" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #ffffff; text-decoration: none; padding: 14px 30px; font-size: 16px; font-weight: 600; border-radius: 8px; display: inline-block; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);">
+          <a href="${process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL || 'http://localhost:3000'}/auth/signin" target="_blank" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #ffffff; text-decoration: none; padding: 14px 30px; font-size: 16px; font-weight: 600; border-radius: 8px; display: inline-block; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);">
             Check In Now
           </a>
         </td>
@@ -342,7 +342,7 @@ export function getCheckOutReminderEmailHtml(employeeName: string, orgName: stri
     <table width="100%" border="0" cellspacing="0" cellpadding="0" style="margin: 32px 0;">
       <tr>
         <td align="center">
-          <a href="${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/auth/signin" target="_blank" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #ffffff; text-decoration: none; padding: 14px 30px; font-size: 16px; font-weight: 600; border-radius: 8px; display: inline-block; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);">
+          <a href="${process.env.NEXT_PUBLIC_APP_URL || process.env.NEXTAUTH_URL || 'http://localhost:3000'}/auth/signin" target="_blank" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #ffffff; text-decoration: none; padding: 14px 30px; font-size: 16px; font-weight: 600; border-radius: 8px; display: inline-block; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);">
             Check Out Now
           </a>
         </td>
