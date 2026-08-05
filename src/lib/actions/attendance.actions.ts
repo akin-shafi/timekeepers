@@ -702,8 +702,12 @@ export async function getDashboardStatsAction() {
   const userSession = await requireAuth();
   
   const user = await db.user.findUnique({
-    where: { id: userSession.id },
-    include: { organization: { select: { displayDetectedLocationEnabled: true } } }
+    where: { id: userSession.id }
+  });
+
+  const org = await db.organization.findUnique({
+    where: { id: userSession.organizationId },
+    select: { displayDetectedLocationEnabled: true }
   });
 
   if (!user) return { success: false, error: "User not found" };
@@ -749,7 +753,7 @@ export async function getDashboardStatsAction() {
     requiredPerWeek: user.requiredOfficeDaysPerWeek,
     officeDays: officeDays,
     isDynamic,
-    displayDetectedLocationEnabled: user.organization?.displayDetectedLocationEnabled ?? true
+    displayDetectedLocationEnabled: org?.displayDetectedLocationEnabled ?? true
   };
 }
 
