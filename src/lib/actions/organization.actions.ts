@@ -244,3 +244,41 @@ export async function updateOrganizationModulesAction(orgId: string, disabledMod
     return { success: false, error: err.message || "Failed to update organization modules." };
   }
 }
+
+/**
+ * Update the display location setting for an organization (HR or Super Admin only).
+ */
+export async function toggleDisplayLocationAction(orgId: string, enabled: boolean) {
+  try {
+    const user = await requireRole(["SUPER_ADMIN", "HR"]);
+    
+    if (user.role === "HR" && user.organizationId !== orgId) {
+      return { success: false, error: "You do not have permission to modify this organization." };
+    }
+
+    const org = await db.organization.update({
+      where: { id: orgId },
+      data: {
+        displayDetectedLocationEnabled: enabled,
+      },
+    });
+
+    await db.auditLog.create({
+      data: {
+        organizationId: orgId,
+        userId: user.id,
+        action: "ORGANIZATION_LOCATION_DISPLAY_UPDATED",
+        entity: "Organization",
+        entityId: org.id,
+        newValue: { displayDetectedLocationEnabled: enabled },
+      },
+    });
+
+    revalidatePath("/admin/organizations");
+    revalidatePath("/admin/organizations/" + orgId);
+    return { success: true, organization: org };
+  } catch (err: any) {
+    return { success: false, error: err.message || "Failed to update location display setting." };
+  }
+}
+

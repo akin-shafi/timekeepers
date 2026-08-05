@@ -126,6 +126,7 @@ model Organization {
   hrApprovalRequiredForCorrection  Boolean                    @default(false)
   aiMilestoneSummaryEnabled         Boolean                    @default(false)
   disabledModules                   String[]                   @default([])
+  displayDetectedLocationEnabled    Boolean                    @default(true)
   createdAt                         DateTime                   @default(now())
   updatedAt                         DateTime                   @updatedAt
 

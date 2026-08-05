@@ -51,6 +51,7 @@ export default function EmployeeDashboard() {
   const [requiredDays, setRequiredDays] = useState<number>(8);
   const [requiredPerWeek, setRequiredPerWeek] = useState<number>(2);
   const [officeDays, setOfficeDays] = useState<string[]>([]);
+  const [displayLocationEnabled, setDisplayLocationEnabled] = useState<boolean>(true);
 
   const checkWorkingDay = async () => {
     try {
@@ -142,6 +143,9 @@ export default function EmployeeDashboard() {
         setRequiredDays(res.requiredDays || 8);
         setRequiredPerWeek(res.requiredPerWeek || 2);
         setOfficeDays(res.officeDays || []);
+        if (res.displayDetectedLocationEnabled !== undefined) {
+          setDisplayLocationEnabled(res.displayDetectedLocationEnabled);
+        }
       }
     } catch (e) {
       console.error("Failed to fetch dashboard stats", e);
@@ -345,39 +349,41 @@ export default function EmployeeDashboard() {
               )}
 
               {/* Display Address / Geolocation Status Card */}
-              <div className="space-y-3 bg-gray-100 dark:bg-slate-900/80 p-4 rounded-2xl border border-gray-200 dark:border-slate-800 text-xs">
-                <div className="flex items-center justify-between text-gray-500 dark:text-slate-400">
-                  <div className="flex items-center gap-2">
-                    <Navigation className="h-4 w-4 text-emerald-500 dark:text-emerald-450 animate-pulse" />
-                    <span className="font-semibold text-gray-700 dark:text-slate-300">Your Detected Location:</span>
-                  </div>
-                  {coords.lat !== undefined && coords.lng !== undefined ? (
-                    <span className="text-emerald-600 dark:text-emerald-400 font-mono font-medium">
-                      GPS ({coords.lat.toFixed(4)}, {coords.lng.toFixed(4)})
-                    </span>
-                  ) : gpsError ? (
-                    <span className="text-red-500 dark:text-red-400 font-medium">
-                      {gpsError}
-                    </span>
-                  ) : (
-                    <span className="text-amber-500 dark:text-amber-400 font-medium animate-pulse">
-                      Awaiting GPS Access...
-                    </span>
-                  )}
-                </div>
-
-                {coords.lat !== undefined && coords.lng !== undefined && (
-                  <div className="pt-2 border-t border-gray-200/50 dark:border-slate-800 text-gray-600 dark:text-slate-300 font-sans">
-                    {loadingAddress ? (
-                      <span className="text-gray-400 dark:text-slate-500 animate-pulse">Resolving current address...</span>
+              {displayLocationEnabled && (
+                <div className="space-y-3 bg-gray-100 dark:bg-slate-900/80 p-4 rounded-2xl border border-gray-200 dark:border-slate-800 text-xs">
+                  <div className="flex items-center justify-between text-gray-500 dark:text-slate-400">
+                    <div className="flex items-center gap-2">
+                      <Navigation className="h-4 w-4 text-emerald-500 dark:text-emerald-450 animate-pulse" />
+                      <span className="font-semibold text-gray-700 dark:text-slate-300">Your Detected Location:</span>
+                    </div>
+                    {coords.lat !== undefined && coords.lng !== undefined ? (
+                      <span className="text-emerald-600 dark:text-emerald-400 font-mono font-medium">
+                        GPS ({coords.lat.toFixed(4)}, {coords.lng.toFixed(4)})
+                      </span>
+                    ) : gpsError ? (
+                      <span className="text-red-500 dark:text-red-400 font-medium">
+                        {gpsError}
+                      </span>
                     ) : (
-                      <p className="font-medium bg-white/50 dark:bg-black/10 px-3 py-2 rounded-lg border border-gray-200/20 dark:border-slate-800/40 select-all">
-                        {address || "Address details not resolved"}
-                      </p>
+                      <span className="text-amber-500 dark:text-amber-400 font-medium animate-pulse">
+                        Awaiting GPS Access...
+                      </span>
                     )}
                   </div>
-                )}
-              </div>
+
+                  {coords.lat !== undefined && coords.lng !== undefined && (
+                    <div className="pt-2 border-t border-gray-200/50 dark:border-slate-800 text-gray-600 dark:text-slate-300 font-sans">
+                      {loadingAddress ? (
+                        <span className="text-gray-400 dark:text-slate-500 animate-pulse">Resolving current address...</span>
+                      ) : (
+                        <p className="font-medium bg-white/50 dark:bg-black/10 px-3 py-2 rounded-lg border border-gray-200/20 dark:border-slate-800/40 select-all">
+                          {address || "Address details not resolved"}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
 
               <button
                 onClick={() => {
