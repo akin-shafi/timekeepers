@@ -129,18 +129,41 @@ export async function updateMyProfileAction({
       });
 
       if (departmentId !== undefined) {
-        await tx.departmentMembership.deleteMany({
+        const existingMemberships = await tx.departmentMembership.findMany({
           where: { userId: authUser.id },
+          orderBy: { createdAt: 'asc' },
         });
-        
-        if (departmentId !== "") {
-          await tx.departmentMembership.create({
-            data: {
-              userId: authUser.id,
-              departmentId,
-              isHead: false,
-            },
-          });
+
+        const alreadyInDept = departmentId !== "" && existingMemberships.some(m => m.departmentId === departmentId);
+
+        if (!alreadyInDept) {
+          const primary = existingMemberships[0];
+
+          if (departmentId === "") {
+            if (primary) {
+              await tx.departmentMembership.delete({
+                where: { id: primary.id },
+              });
+            }
+          } else {
+            if (primary) {
+              await tx.departmentMembership.update({
+                where: { id: primary.id },
+                data: { 
+                  departmentId,
+                  isHead: false,
+                },
+              });
+            } else {
+              await tx.departmentMembership.create({
+                data: {
+                  userId: authUser.id,
+                  departmentId,
+                  isHead: false,
+                },
+              });
+            }
+          }
         }
       }
 
